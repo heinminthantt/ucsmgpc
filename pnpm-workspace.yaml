@@ -1,0 +1,11 @@
+packages:
+  - '.'
+
+allowBuilds:
+  unrs-resolver: false
+
+overrides:
+  journal-ds: link:../journal-ds
+
+publicHoistPattern:
+  - '@inertiajs/core'

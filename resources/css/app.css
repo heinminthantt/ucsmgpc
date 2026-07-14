@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Lora:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'journal-ds/styles';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Map Google Font families to journal-ds CSS variable hooks ── */
+:root {
+    --font-lora: 'Lora', Georgia, 'Times New Roman', serif;
+    --font-playfair: 'Playfair Display', Georgia, serif;
+    --font-jetbrains: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+@theme inline {
+    /* Let journal-ds control fonts — just add sidebar color tokens */
+    --color-sidebar:                    var(--journal-paper-dark);
+    --color-sidebar-foreground:         var(--foreground);
+    --color-sidebar-primary:            var(--primary);
+    --color-sidebar-primary-foreground: var(--primary-foreground);
+    --color-sidebar-accent:             var(--journal-warm);
+    --color-sidebar-accent-foreground:  var(--foreground);
+    --color-sidebar-border:             var(--border);
+    --color-sidebar-ring:               var(--ring);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-serif);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-display);
+    }
+    button:not(:disabled),
+    [role='button']:not(:disabled) {
+        cursor: pointer;
+    }
+}
+
+/* ── Smooth page transitions ── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-enter {
+    animation: fadeInUp 0.35s ease-out both;
+}
+
+/* ── Quill editor styles ── */
+.dark .ql-toolbar.ql-snow,
+.dark .ql-container.ql-snow {
+    border-color: var(--border);
+}
+.dark .ql-toolbar .ql-stroke { stroke: var(--foreground); }
+.dark .ql-toolbar .ql-fill  { fill: var(--foreground); }
+.dark .ql-toolbar .ql-picker { color: var(--foreground); }
+.dark .ql-picker-options     { background-color: var(--card); }
+.dark .ql-editor             { color: var(--foreground); background-color: var(--card); }
+.ql-container.ql-snow        { font-family: var(--font-serif); font-size: 15px; }

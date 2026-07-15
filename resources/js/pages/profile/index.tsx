@@ -18,7 +18,6 @@ export default function ProfilePage() {
     const qc = useQueryClient();
     const { data: me, refetch: refetchMe } = useMe();
     const { data: myProjects, isLoading: projectsLoading } = useUserProjects(me?.id);
-    const fileRef = useRef<HTMLInputElement>(null);
 
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState({ name: '', bio: '', avatar_url: '' });
@@ -42,18 +41,6 @@ export default function ProfilePage() {
         onError: () => toast.error('Update failed'),
     });
 
-    const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2 MB'); return; }
-        const fd = new FormData();
-        fd.append('image', file);
-        try {
-            const res = await api.post('/users/upload-avatar', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setForm((p) => ({ ...p, avatar_url: res.data.url }));
-            toast.success('Avatar updated successfully!');
-        } catch { toast.error('Upload failed'); }
-    };
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -78,7 +65,6 @@ export default function ProfilePage() {
         </div>
     );
 
-    const displayAvatar = editing ? form.avatar_url : me.avatar_url;
 
     return (
         <>
@@ -121,33 +107,17 @@ export default function ProfilePage() {
 
                                 {/* Avatar column */}
                                 <div className="flex flex-col items-center text-center gap-3 w-full md:w-52 shrink-0 p-5 rounded-[var(--radius-lg)] bg-journal-warm/10 border border-journal-rule/30">
-                                    <div className="relative group cursor-pointer" onClick={() => fileRef.current?.click()}>
+                                    <div className="relative">
                                         {/* Decorative burgundy frame */}
                                         <div className="absolute -inset-1.5 rounded-full border border-journal-burgundy/25" aria-hidden="true" />
-                                        <Avatar size="xl" className="size-28 border-2 border-journal-burgundy/30 shadow-md transition-transform duration-300 group-hover:scale-[1.02]">
-                                            {displayAvatar ? (
-                                                <AvatarImage src={displayAvatar} alt={me.name} className="object-cover" />
-                                            ) : (
-                                                <AvatarFallback className="text-4xl font-display bg-journal-burgundy text-journal-paper">
-                                                    {me.name[0].toUpperCase()}
-                                                </AvatarFallback>
-                                            )}
+                                        <Avatar size="xl" className="size-28 border-2 border-journal-burgundy/30 shadow-md">
+                                            <AvatarFallback className="text-4xl font-display bg-journal-burgundy text-journal-paper">
+                                                {me.name[0].toUpperCase()}
+                                            </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-journal-ink/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                            <Icon icon="mdi:camera-outline" className="text-journal-paper text-2xl" />
-                                        </div>
                                     </div>
-                                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
 
-                                    <button
-                                        type="button"
-                                        onClick={() => fileRef.current?.click()}
-                                        className="text-xs font-serif italic text-journal-burgundy underline underline-offset-2 hover:text-journal-ink transition-colors"
-                                    >
-                                        Change Photo
-                                    </button>
-
-                                    <Badge variant={(roleColors[me.role] as any) ?? 'secondary'} className="text-xs tracking-wider uppercase px-2.5 py-0.5">
+                                    <Badge variant={(roleColors[me.role] as any) ?? 'secondary'} className="text-xs tracking-wider uppercase px-2.5 py-0.5 mt-2">
                                         {me.role}
                                     </Badge>
                                 </div>

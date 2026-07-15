@@ -12,20 +12,15 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-    private function requireAdmin(): void
-    {
-        if (!Auth::user()->isAdmin()) abort(403);
-    }
+
 
     public function index(): Response
     {
-        $this->requireAdmin();
         return Inertia::render('admin/dashboard');
     }
 
     public function users(Request $request): JsonResponse
     {
-        $this->requireAdmin();
         $size = min((int)($request->size ?? 100), 200);
         $page = max((int)($request->page ?? 0), 0) + 1;
 
@@ -33,8 +28,15 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($size, ['*'], 'page', $page);
 
+        // ── FIX: Normalize role to uppercase in response ──
+        $items = collect($paginated->items())->map(function ($user) {
+            $userArray = $user->toArray();
+            $userArray['role'] = strtoupper($userArray['role'] ?? 'USER');
+            return $userArray;
+        });
+
         return response()->json([
-            'content' => $paginated->items(),
+            'content' => $items,
             'totalPages' => $paginated->lastPage(),
             'number' => $paginated->currentPage() - 1,
         ]);
@@ -42,7 +44,6 @@ class AdminController extends Controller
 
     public function projects(Request $request): JsonResponse
     {
-        $this->requireAdmin();
         $size = min((int)($request->size ?? 100), 200);
         $page = max((int)($request->page ?? 0), 0) + 1;
 
@@ -50,8 +51,17 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($size, ['*'], 'page', $page);
 
+        // ── FIX: Normalize approval_status to uppercase ──
+        $items = collect($paginated->items())->map(function ($project) {
+            $projectArray = $project->toArray();
+            $projectArray['approvalStatus'] = strtoupper($projectArray['approval_status'] ?? 'PENDING');
+            $projectArray['submittedByName'] = $projectArray['user']['name'] ?? null;
+            unset($projectArray['approval_status']);
+            return $projectArray;
+        });
+
         return response()->json([
-            'content' => $paginated->items(),
+            'content' => $items,
             'totalPages' => $paginated->lastPage(),
             'number' => $paginated->currentPage() - 1,
         ]);
@@ -59,15 +69,17 @@ class AdminController extends Controller
 
     public function updateUserRole(Request $request, User $user): JsonResponse
     {
-        $this->requireAdmin();
         $validated = $request->validate(['role' => 'required|in:user,supervisor,admin']);
         $user->update(['role' => $validated['role']]);
-        return response()->json($user);
+
+        // ── FIX: Return normalized uppercase role ──
+        $userArray = $user->toArray();
+        $userArray['role'] = strtoupper($userArray['role']);
+        return response()->json($userArray);
     }
 
     public function deactivateUser(User $user): JsonResponse
     {
-        $this->requireAdmin();
         $user->update(['is_active' => false]);
         return response()->json(['message' => 'User deactivated']);
     }
@@ -79,6 +91,14 @@ class AdminController extends Controller
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
-        return response()->json($supervisors);
+
+        // ── FIX: Normalize roles ──
+        $normalized = $supervisors->map(function ($s) {
+            $arr = $s->toArray();
+            $arr['role'] = 'SUPERVISOR';
+            return $arr;
+        });
+
+        return response()->json($normalized);
     }
 }

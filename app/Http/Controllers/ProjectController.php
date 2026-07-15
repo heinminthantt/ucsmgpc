@@ -29,12 +29,7 @@ class ProjectController extends Controller
         // Keyword search
         if ($request->filled('keyword')) {
             $kw = $request->keyword;
-            $query->where(function ($q) use ($kw) {
-                $q->where('title', 'like', "%$kw%")
-                  ->orWhere('description', 'like', "%$kw%")
-                  ->orWhere('body', 'like', "%$kw%")
-                  ->orWhere('objectives', 'like', "%$kw%");
-            });
+            $query->whereFullText(['title', 'description', 'body', 'objectives'], $kw);
         }
 
         if ($request->filled('departmentId')) {
@@ -121,7 +116,7 @@ class ProjectController extends Controller
             'department_id' => 'required|exists:departments,id',
             'course_id' => 'required|exists:courses,id',
             'supervisor_id' => 'nullable|exists:users,id',
-            'members_json' => 'nullable|string',
+            'members_json' => 'nullable|json',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
@@ -194,7 +189,7 @@ class ProjectController extends Controller
             'department_id' => 'required|exists:departments,id',
             'course_id' => 'required|exists:courses,id',
             'supervisor_id' => 'nullable|exists:users,id',
-            'members_json' => 'nullable|string',
+            'members_json' => 'nullable|json',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
@@ -247,6 +242,19 @@ class ProjectController extends Controller
         return response()->json($projects->map(fn($p) => $this->formatProject($p)));
     }
 
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|max:10240',
+        ]);
+
+        $path = $request->file('image')->store('project-images', 'public');
+
+        return response()->json([
+            'url' => \Illuminate\Support\Facades\Storage::url($path)
+        ]);
+    }
+
     public function formatProjectPublic(Project $project): array
     {
         return $this->formatProject($project);
@@ -255,6 +263,14 @@ class ProjectController extends Controller
     private function formatProject(Project $project): array
     {
         $project->loadMissing(['tags', 'files', 'department', 'course', 'supervisor']);
+        $coverImageUrl = $project->cover_image_url;
+        if (!$coverImageUrl && !empty($project->body)) {
+            preg_match('/<img[^>]+src=[\'"]([^\'"]+)[\'"][^>]*>/i', $project->body, $matches);
+            if (!empty($matches[1])) {
+                $coverImageUrl = $matches[1];
+            }
+        }
+
         return [
             'id' => $project->id,
             'title' => $project->title,
@@ -264,7 +280,7 @@ class ProjectController extends Controller
             'excerpt' => $project->excerpt,
             'contentFormat' => $project->content_format,
             'githubLink' => $project->github_link,
-            'coverImageUrl' => $project->cover_image_url,
+            'coverImageUrl' => $coverImageUrl,
             'academic_year' => $project->academic_year,
             'student_year' => $project->student_year,
             'objectives' => $project->objectives,

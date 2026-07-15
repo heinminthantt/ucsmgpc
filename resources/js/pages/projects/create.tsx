@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, lazy, Suspense, useRef } from 'react';
 import { Icon } from '@iconify/react';
 import {
     Button, Badge, Card, CardContent, CardHeader,
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useDepartments, useAllCourses, useSupervisors } from '@/hooks/useCatalog';
 import api from '@/lib/api';
 import 'react-quill-new/dist/quill.snow.css';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
@@ -35,16 +36,7 @@ const SEMESTER_PREFIXES: Record<string, string[]> = {
     'Final Project': ['Final'],
 };
 
-const QUILL_MODULES = {
-    toolbar: [
-        [{ header: '1' }, { header: '2' }],
-        ['bold','italic','underline','strike','blockquote','code-block'],
-        [{ list: 'ordered' },{ list: 'bullet' }],
-        [{ indent: '-1' },{ indent: '+1' }],
-        [{ align: '' },{ align: 'center' },{ align: 'right' }],
-        ['link','image'],
-    ],
-};
+
 
 /* Editorial section header used across every card for a consistent rhythm */
 function SectionHeader({ icon, step, title, hint }: { icon: string; step: string; title: string; hint?: string }) {
@@ -66,6 +58,52 @@ export default function ProjectCreate() {
     const { data: departments } = useDepartments();
     const { data: allCourses } = useAllCourses();
     const { data: supervisors } = useSupervisors();
+
+    const quillRef = useRef<any>(null);
+
+    const modules = useMemo(() => ({
+        toolbar: {
+            container: [
+                [{ header: '1' }, { header: '2' }],
+                ['bold','italic','underline','strike','blockquote','code-block'],
+                [{ list: 'ordered' },{ list: 'bullet' }],
+                [{ indent: '-1' },{ indent: '+1' }],
+                [{ align: '' },{ align: 'center' },{ align: 'right' }],
+                ['link','image'],
+            ],
+            handlers: {
+                image: () => {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'file');
+                    input.setAttribute('accept', 'image/*');
+                    input.click();
+                    input.onchange = async () => {
+                        const file = input.files ? input.files[0] : null;
+                        if (!file) return;
+                        if (file.size > 10 * 1024 * 1024) {
+                            toast.error('Image exceeds 10MB limit');
+                            return;
+                        }
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        try {
+                            const res = await api.post('/projects/upload-image', formData, {
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                            });
+                            const url = res.data.url;
+                            const quill = quillRef.current?.getEditor();
+                            if (quill) {
+                                const range = quill.getSelection(true);
+                                quill.insertEmbed(range.index, 'image', url);
+                            }
+                        } catch (err: any) {
+                            toast.error(err.response?.data?.message || 'Failed to upload image');
+                        }
+                    };
+                }
+            }
+        }
+    }), []);
 
     const [form, setForm] = useState({
         title: '', description: '', objectives: '', benefits: '',
@@ -401,7 +439,18 @@ export default function ProjectCreate() {
                                         <span className="text-sm font-medium text-journal-ink">Click to choose ZIP files</span>
                                         <span className="text-xs italic font-serif text-journal-sepia/70">ZIP files only &middot; max 50 MB each</span>
                                         <input type="file" accept=".zip" multiple className="sr-only"
-                                            onChange={(e) => e.target.files && setFiles(Array.from(e.target.files))} />
+                                            onChange={(e) => {
+                                                if (!e.target.files) return;
+                                                const newFiles = Array.from(e.target.files);
+                                                const validFiles = newFiles.filter(f => {
+                                                    if (f.size > 50 * 1024 * 1024) {
+                                                        toast.error(`File ${f.name} exceeds 50MB limit`);
+                                                        return false;
+                                                    }
+                                                    return true;
+                                                });
+                                                setFiles(prev => [...prev, ...validFiles]);
+                                            }} />
                                     </label>
                                     {files.length > 0 && (
                                         <ul className="space-y-1.5">
@@ -425,20 +474,23 @@ export default function ProjectCreate() {
                             </CardHeader>
                             <CardContent className="flex flex-col flex-1 gap-4 pt-5">
                                 <div className="rounded-md border border-journal-rule overflow-hidden bg-background" style={{ minHeight: 520 }}>
-                                    <Suspense fallback={
-                                        <div className="flex items-center justify-center h-64 text-journal-sepia font-serif italic">
-                                            <Icon icon="mdi:loading" className="animate-spin mr-2" aria-hidden="true" />Loading editor...
-                                        </div>
-                                    }>
-                                        <ReactQuill
-                                            theme="snow"
-                                            modules={QUILL_MODULES}
-                                            placeholder="Write your detailed project report here..."
-                                            value={form.body}
-                                            onChange={(v) => set('body', v)}
-                                            style={{ height: 480 }}
-                                        />
-                                    </Suspense>
+                                    <ErrorBoundary>
+                                        <Suspense fallback={
+                                            <div className="flex items-center justify-center h-64 text-journal-sepia font-serif italic">
+                                                <Icon icon="mdi:loading" className="animate-spin mr-2" aria-hidden="true" />Loading editor...
+                                            </div>
+                                        }>
+                                            <ReactQuill
+                                                ref={quillRef}
+                                                theme="snow"
+                                                modules={modules}
+                                                placeholder="Write your detailed project report here..."
+                                                value={form.body}
+                                                onChange={(v) => set('body', v)}
+                                                style={{ height: 480 }}
+                                            />
+                                        </Suspense>
+                                    </ErrorBoundary>
                                 </div>
 
                                 <OrnamentalDivider variant="ornamental" glyph="❉" className="mx-auto opacity-70" />

@@ -48,10 +48,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
 
     // Supervisor Dashboard (page)
-    Route::get('/supervisor-dashboard', [SupervisorController::class, 'index'])->name('supervisor.dashboard');
+    Route::middleware('role:supervisor')->group(function () {
+        Route::get('/supervisor-dashboard', [SupervisorController::class, 'index'])->name('supervisor.dashboard');
+    });
 
     // Admin Dashboard (page)
-    Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    });
 
     // ─── Auth-protected API ───────────────────────────────────────────────────
     Route::prefix('api')->group(function () {
@@ -69,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/supervisors', [AdminController::class, 'supervisors']);
 
         // Projects (CRUD)
+        Route::post('/projects/upload-image', [ProjectController::class, 'uploadImage'])->name('api.projects.upload-image');
         Route::post('/projects', [ProjectController::class, 'store'])->name('api.projects.store');
         Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('api.projects.update');
         Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('api.projects.destroy');
@@ -102,15 +107,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
 
         // Admin
-        Route::get('/admin/users', [AdminController::class, 'users']);
-        Route::get('/admin/projects', [AdminController::class, 'projects']);
-        Route::put('/admin/users/{user}/role', [AdminController::class, 'updateUserRole']);
-        Route::delete('/admin/users/{user}', [AdminController::class, 'deactivateUser']);
+        Route::middleware('role:admin')->prefix('admin')->group(function () {
+            Route::get('/users', [AdminController::class, 'users']);
+            Route::get('/projects', [AdminController::class, 'projects']);
+            Route::put('/users/{user}/role', [AdminController::class, 'updateUserRole']);
+            Route::delete('/users/{user}', [AdminController::class, 'deactivateUser']);
+        });
 
         // Supervisor
-        Route::get('/supervisor/projects/pending', [SupervisorController::class, 'pendingProjects']);
-        Route::post('/supervisor/projects/{project}/approve', [SupervisorController::class, 'approve']);
-        Route::post('/supervisor/projects/{project}/reject', [SupervisorController::class, 'reject']);
+        Route::middleware('role:supervisor')->prefix('supervisor')->group(function () {
+            Route::get('/projects/pending', [SupervisorController::class, 'pendingProjects']);
+            Route::post('/projects/{project}/approve', [SupervisorController::class, 'approve']);
+            Route::post('/projects/{project}/reject', [SupervisorController::class, 'reject']);
+        });
     });
 });
 

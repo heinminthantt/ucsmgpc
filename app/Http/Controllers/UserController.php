@@ -61,6 +61,7 @@ class UserController extends Controller
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
             'bio' => $user->bio,
+            'role' => strtoupper($user->role),
         ]);
     }
 

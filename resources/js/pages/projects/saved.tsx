@@ -12,17 +12,22 @@ export default function SavedProjects() {
         <>
             <Head title="Saved Projects" />
             <div className="mx-auto max-w-5xl px-6 lg:px-8 py-12">
-                <div className="mb-8 flex items-center justify-between">
-                    <div>
-                        <Heading level="h1" className="text-3xl text-journal-ink">Saved Projects</Heading>
-                        <Text variant="muted" className="mt-1">Projects you've bookmarked for later.</Text>
+                <header className="text-center space-y-3 mb-10 relative">
+                    <div className="absolute right-0 top-0 hidden md:block">
+                        <Link href="/projects">
+                            <Button variant="outline" size="sm" className="gap-2 font-serif text-journal-ink hover:text-journal-burgundy transition-colors">
+                                <Icon icon="mdi:compass-outline" />Browse more
+                            </Button>
+                        </Link>
                     </div>
-                    <Link href="/projects">
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Icon icon="mdi:compass-outline" />Browse more
-                        </Button>
-                    </Link>
-                </div>
+                    <p className="journal-eyebrow">Personal Archive &middot; Reading List</p>
+                    <Heading level="h1" className="font-display text-4xl tracking-tight text-journal-ink">
+                        Saved Projects
+                    </Heading>
+                    <Text variant="muted" italic className="font-serif text-base max-w-xl mx-auto">
+                        A curated collection of projects you've bookmarked for later reference.
+                    </Text>
+                </header>
 
                 <OrnamentalDivider variant="simple" className="mb-8" />
 

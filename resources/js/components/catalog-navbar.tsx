@@ -17,6 +17,7 @@ export function CatalogNavbar() {
         { label: 'Projects', href: '/projects', icon: 'mdi:folder-multiple-outline' },
         ...(user
             ? [
+                  { label: 'Dashboard', href: '/dashboard', icon: 'mdi:view-dashboard-outline' },
                   { label: 'Saved', href: '/saved-projects', icon: 'mdi:bookmark-outline' },
                   { label: 'Create', href: '/projects/create', icon: 'mdi:plus-circle-outline' },
               ]
@@ -34,10 +35,7 @@ export function CatalogNavbar() {
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-journal-burgundy text-journal-paper text-xs font-bold shadow-sm group-hover:shadow-md transition-shadow">
-                        PC
-                    </div>
-                    <span className="hidden font-display font-bold text-lg text-journal-burgundy tracking-tight sm:block">
+                    <span className="font-display font-bold text-lg text-journal-burgundy tracking-tight">
                         Project Catalog
                     </span>
                 </Link>
@@ -58,14 +56,7 @@ export function CatalogNavbar() {
 
                 {/* Right actions */}
                 <div className="flex items-center gap-1.5">
-                    {/* Theme toggle */}
-                    <button
-                        onClick={() => updateAppearance(appearance === 'dark' ? 'light' : 'dark')}
-                        className="rounded-sm p-2 text-journal-sepia hover:bg-journal-warm/40 hover:text-journal-burgundy transition-colors"
-                        aria-label="Toggle theme"
-                    >
-                        <Icon icon={appearance === 'dark' ? 'mdi:weather-sunny' : 'mdi:weather-night'} className="text-lg" />
-                    </button>
+                    {/* Theme toggle removed */}
 
                     {user ? (
                         <>

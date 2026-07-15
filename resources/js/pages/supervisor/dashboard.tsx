@@ -155,7 +155,7 @@ export default function SupervisorDashboard() {
                                                 onClick={() => approveMutation.mutate(project.id)}>
                                                 <Icon icon="mdi:check" />Approve
                                             </Button>
-                                            <Button size="sm" variant="destructive" className="col-span-1 gap-1"
+                                            <Button size="sm" className="col-span-1 gap-1"
                                                 onClick={() => setRejectProject(project)}>
                                                 <Icon icon="mdi:close" />Reject
                                             </Button>
@@ -194,7 +194,7 @@ export default function SupervisorDashboard() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setRejectProject(null)}>Cancel</Button>
-                        <Button variant="destructive" disabled={!reason.trim() || rejectMutation.isPending}
+                        <Button disabled={!reason.trim() || rejectMutation.isPending}
                             onClick={() => rejectProject && rejectMutation.mutate({ id: rejectProject.id, reason })}>
                             {rejectMutation.isPending ? 'Rejecting...' : 'Reject Project'}
                         </Button>

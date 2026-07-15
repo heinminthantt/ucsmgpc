@@ -12,21 +12,15 @@ use Inertia\Response;
 
 class SupervisorController extends Controller
 {
-    private function requireSupervisorOrAdmin(): void
-    {
-        $user = Auth::user();
-        if (!$user->isSupervisor() && !$user->isAdmin()) abort(403);
-    }
+
 
     public function index(): Response
     {
-        $this->requireSupervisorOrAdmin();
         return Inertia::render('supervisor/dashboard');
     }
 
     public function pendingProjects(): JsonResponse
     {
-        $this->requireSupervisorOrAdmin();
 
         $projects = Project::with(['user:id,name', 'department:id,name', 'course:id,name,code', 'tags'])
             ->where('supervisor_id', Auth::id())
@@ -53,7 +47,6 @@ class SupervisorController extends Controller
 
     public function approve(Project $project): JsonResponse
     {
-        $this->requireSupervisorOrAdmin();
         if ($project->supervisor_id !== Auth::id() && !Auth::user()->isAdmin()) abort(403);
 
         $project->update([
@@ -77,7 +70,6 @@ class SupervisorController extends Controller
 
     public function reject(Request $request, Project $project): JsonResponse
     {
-        $this->requireSupervisorOrAdmin();
         if ($project->supervisor_id !== Auth::id() && !Auth::user()->isAdmin()) abort(403);
 
         $validated = $request->validate(['reason' => 'required|string|max:1000']);

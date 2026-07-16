@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import InputError from '@/components/input-error';
 import PasskeyVerify from '@/components/passkey-verify';
@@ -15,6 +16,8 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const [remember, setRemember] = useState(false);
+
     return (
         <>
             <Head title="Log in" />
@@ -82,8 +85,14 @@ export default function Login({ status, canResetPassword }: Props) {
                             </div>
 
                             <div className="flex items-center gap-2.5">
-                                <Checkbox id="remember" name="remember" tabIndex={3} />
-                                <Label htmlFor="remember" className="text-sm font-normal font-serif cursor-pointer">
+                                <Checkbox 
+                                    id="remember-ui" 
+                                    tabIndex={3} 
+                                    checked={remember}
+                                    onCheckedChange={(c) => setRemember(c === true)}
+                                />
+                                {remember && <input type="hidden" name="remember" value="on" />}
+                                <Label htmlFor="remember-ui" className="text-sm font-normal font-serif cursor-pointer">
                                     Remember me
                                 </Label>
                             </div>

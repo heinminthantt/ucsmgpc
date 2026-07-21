@@ -3,9 +3,10 @@ import { useState, useMemo, lazy, Suspense, useRef, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import {
     Button, Badge, Card, CardContent, CardHeader,
-    Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    Input, Label,
     Heading, Text, OrnamentalDivider,
 } from 'journal-ds';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { toast } from 'sonner';
 import { useDepartments, useAllCourses, useSupervisors } from '@/hooks/useCatalog';
 import api from '@/lib/api';

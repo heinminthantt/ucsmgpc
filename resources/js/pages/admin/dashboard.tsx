@@ -5,12 +5,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
     Badge, Button, Card, CardContent, CardHeader, CardDescription,
-    Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    Input, 
     Tabs, TabsContent, TabsList, TabsTrigger,
     Separator,
     Heading, Text,
     OrnamentalDivider,
 } from 'journal-ds';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
     Dialog,
     DialogContent,

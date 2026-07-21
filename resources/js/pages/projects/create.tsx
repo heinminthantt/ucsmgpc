@@ -2,10 +2,9 @@ import { Head, router } from '@inertiajs/react';
 import { useState, useMemo, lazy, Suspense, useRef } from 'react';
 import { Icon } from '@iconify/react';
 import {
-    Button, Badge, Card, CardContent, CardHeader,
-    Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-    Heading, Text, OrnamentalDivider,
-} from 'journal-ds';
+    Button, Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui';
+import {  Card, CardContent, CardHeader, Heading, Text, OrnamentalDivider } from 'journal-ds';
 import { toast } from 'sonner';
 import { useDepartments, useAllCourses, useSupervisors } from '@/hooks/useCatalog';
 import api from '@/lib/api';

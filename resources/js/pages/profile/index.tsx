@@ -4,14 +4,15 @@ import { Icon } from '@iconify/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-    Badge, Button, Card, CardContent, CardHeader,
-    Avatar, AvatarFallback, AvatarImage,
-    Input, Label, Separator,
+    Button, Card, CardContent, CardHeader,
+    Avatar, AvatarFallback,
+    Input, Label,
     Heading, Text,
     OrnamentalDivider,
 } from 'journal-ds';
 import { useMe, useUserProjects } from '@/hooks/useCatalog';
 import { ProjectCard } from '@/components/project-card';
+import { Badge } from '@/components/ui';
 import api from '@/lib/api';
 
 export default function ProfilePage() {
@@ -56,7 +57,7 @@ export default function ProfilePage() {
     };
 
     const roleColors: Record<string, string> = {
-        ADMIN: 'destructive', SUPERVISOR: 'warning', USER: 'secondary',
+        ADMIN: 'warning', SUPERVISOR: 'warning', USER: 'secondary',
     };
 
     if (!me) return (

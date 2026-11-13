@@ -7,6 +7,7 @@ use App\Models\ProjectFile;
 use App\Models\Review;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\EvaluationService;
 use App\Services\ProjectLifecycle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -117,6 +118,18 @@ class SubmissionController extends Controller
             }
         }
 
+        if ($stage === 'mid_review') {
+            // Mid-review checklist (spec WF5): a short progress summary is
+            // the one required item; it travels in the submission payload.
+            $summary = $validated['payload']['progress_summary'] ?? $validated['payload']['summary'] ?? null;
+            if (blank($summary)) {
+                return response()->json([
+                    'message' => 'Mid-review submission is incomplete.',
+                    'missing' => ['progress summary'],
+                ], 422);
+            }
+        }
+
         $target = match ($stage) {
             'proposal' => 'proposal_submitted',
             'mid_review' => 'mid_review_submitted',
@@ -203,8 +216,16 @@ class SubmissionController extends Controller
             abort(404);
         }
 
+        $viewer = Auth::user();
+        // Rubric scores are visible to staff at any time, and to the team
+        // only once the final result is confirmed (spec D9). Never public:
+        // this endpoint already requires canBeViewedBy().
+        $isStaffViewer = $viewer->isAdmin() || $viewer->isSupervisor() || $viewer->isDepartmentAdmin();
+        $showScores = $isStaffViewer || $project->resultIsConfirmed();
+        $template = $project->rubricTemplate();
+
         $submissions = $project->submissions()
-            ->with(['submitter:id,name', 'reviews.reviewer:id,name', 'files'])
+            ->with(['submitter:id,name', 'reviews.reviewer:id,name', 'reviews.scores', 'files'])
             ->orderBy('stage')
             ->orderByDesc('version')
             ->get()
@@ -220,14 +241,26 @@ class SubmissionController extends Controller
                 'files' => $s->files->map(fn ($f) => [
                     'id' => $f->id, 'name' => $f->original_name, 'kind' => $f->kind, 'url' => $f->file_path,
                 ])->values(),
-                'reviews' => $s->reviews->map(fn ($r) => [
+                'reviews' => $s->reviews->map(fn ($r) => array_filter([
                     'id' => $r->id,
                     'reviewerName' => $r->reviewer?->name,
                     'reviewer_role' => $r->reviewer_role,
                     'decision' => $r->decision,
                     'comment' => $r->comment,
                     'createdAt' => $r->created_at?->toISOString(),
-                ])->values(),
+                    // A reviewer always sees their own scores; everyone
+                    // else follows the D9 gate above.
+                    'scores' => ($showScores || $r->reviewer_id === $viewer->id)
+                        ? $r->scores->map(fn ($score) => [
+                            'criterion_key' => $score->criterion_key,
+                            'score' => (float) $score->score,
+                            'comment' => $score->comment,
+                        ])->values()
+                        : null,
+                    'weightedTotal' => ($showScores || $r->reviewer_id === $viewer->id)
+                        ? $template->weightedTotal($r->scoresByKey())
+                        : null,
+                ], fn ($v) => $v !== null))->values(),
             ]);
 
         return response()->json($submissions);
@@ -240,7 +273,7 @@ class SubmissionController extends Controller
      * Only the assigned supervisor, the assigned examiner, an admin, or a
      * department admin of the project's department may review.
      */
-    public function review(Request $request, Submission $submission, ProjectLifecycle $lifecycle): JsonResponse
+    public function review(Request $request, Submission $submission, ProjectLifecycle $lifecycle, EvaluationService $evaluation): JsonResponse
     {
         $project = $submission->project;
         $reviewer = Auth::user();
@@ -255,16 +288,71 @@ class SubmissionController extends Controller
         $validated = $request->validate([
             'decision' => 'required|in:'.implode(',', Review::DECISIONS),
             'comment' => 'nullable|string|max:2000',
+            // Phase 2 rubric scores (final stage only):
+            // [{criterion_key, score, comment?}]
+            'scores' => 'nullable|array',
+            'scores.*.criterion_key' => 'required_with:scores|string',
+            'scores.*.score' => 'required_with:scores|numeric',
+            'scores.*.comment' => 'nullable|string|max:1000',
         ]);
         $decision = $validated['decision'];
         $comment = $validated['comment'] ?? null;
+        $scores = $validated['scores'] ?? [];
 
         if (in_array($decision, Review::COMMENT_REQUIRED_FOR, true) && blank($comment)) {
             return response()->json(['message' => 'A comment is required for this decision.'], 422);
         }
 
+        // Mid-review feedback is always required (spec WF5): the comment IS
+        // the on-track / needs-attention note, for accept as well.
+        if ($submission->stage === 'mid_review' && blank($comment)) {
+            return response()->json(['message' => 'Mid-review feedback (a comment) is required.'], 422);
+        }
+
+        if ($scores && $submission->stage !== 'final') {
+            return response()->json(['message' => 'Rubric scores only apply to final submissions.'], 422);
+        }
+
         if ($submission->status !== 'submitted') {
             return response()->json(['message' => 'This submission version has already been reviewed.'], 422);
+        }
+
+        // ── Final stage: rubric scoring + examiner confirmation rules ──
+        // Handled by EvaluationService (spec 6.7 / 7). The submission stays
+        // 'submitted' until the result is confirmed, so the second reviewer
+        // can still review the same version.
+        if ($submission->stage === 'final') {
+            try {
+                [$review, $outcome] = DB::transaction(function () use ($submission, $project, $reviewer, $decision, $comment, $scores, $evaluation) {
+                    $review = Review::updateOrCreate(
+                        ['submission_id' => $submission->id, 'reviewer_id' => $reviewer->id],
+                        [
+                            'reviewer_role' => $this->reviewerRole($project, $reviewer),
+                            'decision' => $decision,
+                            'comment' => $comment,
+                        ]
+                    );
+
+                    if ($scores) {
+                        $evaluation->storeScores($review, $project, $scores);
+                    }
+
+                    $outcome = $evaluation->applyFinalReview($project, $submission, $review, $reviewer);
+
+                    return [$review, $outcome];
+                });
+            } catch (\InvalidArgumentException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+
+            return response()->json([
+                'id' => $review->id,
+                'submissionId' => $submission->id,
+                'decision' => $review->decision,
+                'projectStatus' => $project->refresh()->status,
+                'evaluation' => $outcome,
+                'weightedTotal' => $project->rubricTemplate()->weightedTotal($review->load('scores')->scoresByKey()),
+            ]);
         }
 
         // Map (stage, decision) to a submission status + lifecycle target.
@@ -296,10 +384,6 @@ class SubmissionController extends Controller
 
             $submission->update(['status' => $submissionStatus]);
 
-            // A final submission enters evaluation before its result is set.
-            if ($project->status === 'final_submitted' && $target !== 'final_submitted') {
-                $lifecycle->transition($project, 'under_evaluation', $reviewer);
-            }
             if ($project->refresh()->status !== $target) {
                 $lifecycle->transition($project, $target, $reviewer, $comment);
             }
@@ -315,7 +399,13 @@ class SubmissionController extends Controller
         ]);
     }
 
-    /** @return array{0: ?string, 1: ?string} [submission status, lifecycle target] */
+    /**
+     * Used for proposal and mid_review stages. Final-stage decisions do NOT
+     * come through here since Phase 2: EvaluationService owns them (the
+     * 'final' arm below is kept only as documentation of the result mapping).
+     *
+     * @return array{0: ?string, 1: ?string} [submission status, lifecycle target]
+     */
     private function mapDecision(Submission $submission, Project $project, string $decision): array
     {
         return match ($submission->stage) {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Review extends Model
 {
@@ -30,5 +31,17 @@ class Review extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewer_id');
+    }
+
+    /** @return HasMany<RubricScore, $this> */
+    public function scores(): HasMany
+    {
+        return $this->hasMany(RubricScore::class);
+    }
+
+    /** Raw scores keyed by criterion key, ready for RubricTemplate::weightedTotal(). */
+    public function scoresByKey(): array
+    {
+        return $this->scores->mapWithKeys(fn ($s) => [$s->criterion_key => (float) $s->score])->all();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,6 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-
-
     public function index(): Response
     {
         return Inertia::render('admin/dashboard');
@@ -21,8 +20,8 @@ class AdminController extends Controller
 
     public function users(Request $request): JsonResponse
     {
-        $size = min((int)($request->size ?? 100), 200);
-        $page = max((int)($request->page ?? 0), 0) + 1;
+        $size = min((int) ($request->size ?? 100), 200);
+        $page = max((int) ($request->page ?? 0), 0) + 1;
 
         $paginated = User::where('is_active', true)
             ->orderBy('created_at', 'desc')
@@ -32,6 +31,7 @@ class AdminController extends Controller
         $items = collect($paginated->items())->map(function ($user) {
             $userArray = $user->toArray();
             $userArray['role'] = strtoupper($userArray['role'] ?? 'USER');
+
             return $userArray;
         });
 
@@ -44,8 +44,8 @@ class AdminController extends Controller
 
     public function projects(Request $request): JsonResponse
     {
-        $size = min((int)($request->size ?? 100), 200);
-        $page = max((int)($request->page ?? 0), 0) + 1;
+        $size = min((int) ($request->size ?? 100), 200);
+        $page = max((int) ($request->page ?? 0), 0) + 1;
 
         $paginated = Project::with(['user:id,name', 'department:id,name', 'supervisor:id,name'])
             ->orderBy('created_at', 'desc')
@@ -57,6 +57,7 @@ class AdminController extends Controller
             $projectArray['approvalStatus'] = strtoupper($projectArray['approval_status'] ?? 'PENDING');
             $projectArray['submittedByName'] = $projectArray['user']['name'] ?? null;
             unset($projectArray['approval_status']);
+
             return $projectArray;
         });
 
@@ -67,20 +68,29 @@ class AdminController extends Controller
         ]);
     }
 
-    public function updateUserRole(Request $request, User $user): JsonResponse
+    public function updateUserRole(Request $request, User $user, AuditLogger $audit): JsonResponse
     {
         $validated = $request->validate(['role' => 'required|in:user,supervisor,admin']);
+        $previous = $user->role;
         $user->update(['role' => $validated['role']]);
+
+        // Privileged change: audit logged (spec NF10).
+        $audit->log(Auth::user(), 'user.role_changed', $user, [
+            'from' => $previous, 'to' => $validated['role'],
+        ], $request);
 
         // ── FIX: Return normalized uppercase role ──
         $userArray = $user->toArray();
         $userArray['role'] = strtoupper($userArray['role']);
+
         return response()->json($userArray);
     }
 
-    public function deactivateUser(User $user): JsonResponse
+    public function deactivateUser(User $user, AuditLogger $audit): JsonResponse
     {
         $user->update(['is_active' => false]);
+        $audit->log(Auth::user(), 'user.deactivated', $user, [], request());
+
         return response()->json(['message' => 'User deactivated']);
     }
 
@@ -96,6 +106,7 @@ class AdminController extends Controller
         $normalized = $supervisors->map(function ($s) {
             $arr = $s->toArray();
             $arr['role'] = 'SUPERVISOR';
+
             return $arr;
         });
 

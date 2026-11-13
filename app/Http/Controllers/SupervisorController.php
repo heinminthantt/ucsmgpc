@@ -55,6 +55,17 @@ class SupervisorController extends Controller
             abort(403);
         }
 
+        // Phase 2 guard: with an examiner assigned, a final result cannot
+        // be forced through this legacy shortcut before the examiner has
+        // reviewed (spec D2). Admins remain the override path.
+        if (! Auth::user()->isAdmin() && $project->examiner_id
+            && in_array($project->status, ['final_submitted', 'under_evaluation'], true)
+            && ! $this->examinerHasReviewed($project)) {
+            return response()->json([
+                'message' => 'The assigned examiner must review the final submission first. Use the stage review panel.',
+            ], 422);
+        }
+
         // Legacy endpoint, lifecycle-backed: "approve" advances the project
         // to its next approved state instead of writing approval_status
         // directly. The lifecycle service creates the owner notification.
@@ -96,6 +107,15 @@ class SupervisorController extends Controller
 
         $validated = $request->validate(['reason' => 'required|string|max:1000']);
 
+        // Same Phase 2 examiner guard as approve().
+        if (! Auth::user()->isAdmin() && $project->examiner_id
+            && in_array($project->status, ['final_submitted', 'under_evaluation'], true)
+            && ! $this->examinerHasReviewed($project)) {
+            return response()->json([
+                'message' => 'The assigned examiner must review the final submission first. Use the stage review panel.',
+            ], 422);
+        }
+
         // Lifecycle-backed rejection: a proposal is declined (the team can
         // reopen it), a final package goes back as revision_required. The
         // lifecycle transition itself notifies the team (with the reason),
@@ -118,5 +138,13 @@ class SupervisorController extends Controller
             'approvalStatus' => strtoupper($project->refresh()->approval_status),
             'status' => $project->status,
         ]);
+    }
+
+    private function examinerHasReviewed(Project $project): bool
+    {
+        $latestFinal = $project->submissions()->where('stage', 'final')->orderByDesc('id')->first();
+
+        return $latestFinal !== null
+            && $latestFinal->reviews()->where('reviewer_id', $project->examiner_id)->exists();
     }
 }

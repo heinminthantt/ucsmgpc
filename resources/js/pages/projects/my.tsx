@@ -16,10 +16,100 @@ type ProjectWithStatus = Project & { status?: string };
 type SubmissionReview = {
     id: number;
     reviewerName?: string;
+    reviewer_role?: string;
     decision: string;
     comment?: string | null;
     createdAt?: string;
+    // Present only when the viewer may see rubric scores (staff, or the
+    // team after the final result is confirmed).
+    scores?: { criterion_key: string; score: number; comment?: string | null }[] | null;
+    weightedTotal?: number | null;
 };
+
+type LogbookEntry = {
+    id: number;
+    authorName?: string;
+    body: string;
+    link?: string | null;
+    createdAt?: string;
+};
+
+type EvaluationView = {
+    resultConfirmed: boolean;
+    evaluationConflict: boolean;
+    rubricTemplate?: { criteria: { key: string; label: string; weight: number; max: number }[] };
+    reviews?: { id: number; reviewerName?: string; reviewer_role?: string; weightedTotal?: number | null }[];
+    defense?: { scheduledAt?: string; venue?: string | null; note?: string | null } | null;
+};
+
+/** Phase 2 logbook: append-only progress entries written by the team. */
+function LogbookSection({ projectId }: { projectId: number }) {
+    const queryClient = useQueryClient();
+    const [body, setBody] = useState('');
+    const [link, setLink] = useState('');
+    const [posting, setPosting] = useState(false);
+
+    const { data: entries } = useQuery<LogbookEntry[]>({
+        queryKey: ['logbook', projectId],
+        queryFn: () => api.get(`/projects/${projectId}/logbook`).then((r) => r.data),
+    });
+
+    const addEntry = async () => {
+        if (!body.trim()) {
+            return;
+        }
+
+        setPosting(true);
+
+        try {
+            await api.post(`/projects/${projectId}/logbook`, { body: body.trim(), link: link.trim() || null });
+            setBody('');
+            setLink('');
+            toast.success('Logbook entry added');
+            await queryClient.invalidateQueries({ queryKey: ['logbook', projectId] });
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? 'Could not add the logbook entry');
+        } finally {
+            setPosting(false);
+        }
+    };
+
+    return (
+        <div className="space-y-3">
+            <h2 className="text-base font-medium">Logbook</h2>
+            {(entries ?? []).length === 0 && <p className="text-sm text-muted-foreground">No entries yet. Add one after each work session.</p>}
+            {(entries ?? []).map((e) => (
+                <div key={e.id} className="rounded-xl border border-border bg-card p-4 text-sm">
+                    <p className="whitespace-pre-wrap">{e.body}</p>
+                    {e.link && (
+                        <p className="mt-1">
+                            <a className="text-primary underline" href={e.link} target="_blank" rel="noreferrer">
+                                {e.link}
+                            </a>
+                        </p>
+                    )}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        {e.authorName} {e.createdAt ? `· ${new Date(e.createdAt).toLocaleString()}` : ''}
+                    </p>
+                </div>
+            ))}
+            <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+                <textarea
+                    rows={3}
+                    className={textareaClass}
+                    placeholder="What did the team do since the last entry?"
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                />
+                <Input placeholder="Optional link (commit, doc, demo)" value={link} onChange={(e) => setLink(e.target.value)} />
+                <Button size="sm" onClick={addEntry} disabled={posting || !body.trim()}>
+                    {posting ? 'Adding...' : 'Add entry'}
+                </Button>
+                <p className="text-xs text-muted-foreground">Entries cannot be edited or deleted.</p>
+            </div>
+        </div>
+    );
+}
 
 type Submission = {
     id: number;
@@ -96,11 +186,20 @@ export default function MyProject() {
         enabled: !!project,
     });
 
+    const { data: evaluation } = useQuery<EvaluationView>({
+        queryKey: ['evaluation', project?.id],
+        queryFn: () => api.get(`/projects/${project!.id}/evaluation`).then((r) => r.data),
+        enabled: !!project,
+    });
+
+    const [midSummary, setMidSummary] = useState('');
+
     const set = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
     const refresh = async () => {
         await queryClient.invalidateQueries({ queryKey: ['userProjects'] });
         await queryClient.invalidateQueries({ queryKey: ['submissions'] });
+        await queryClient.invalidateQueries({ queryKey: ['evaluation'] });
     };
 
     const errorMessage = (err: any, fallback: string) => {
@@ -140,7 +239,7 @@ return;
         }
     };
 
-    const submitStage = async (stage: 'proposal' | 'final') => {
+    const submitStage = async (stage: 'proposal' | 'final' | 'mid_review') => {
         if (!project) {
 return;
 }
@@ -159,11 +258,20 @@ fd.append(k, String(v));
                 fd.append('project_files[]', reportFile);
                 fd.append('file_kind', 'report_pdf');
                 await api.post(`/projects/${project.id}/submit`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            } else if (stage === 'mid_review') {
+                await api.post(`/projects/${project.id}/submit`, {
+                    ...draftPayload(),
+                    stage,
+                    payload: { progress_summary: midSummary.trim() },
+                });
+                setMidSummary('');
             } else {
                 await api.post(`/projects/${project.id}/submit`, { ...draftPayload(), stage });
             }
 
-            toast.success(stage === 'proposal' ? 'Proposal submitted' : 'Final submission sent');
+            toast.success(
+                stage === 'proposal' ? 'Proposal submitted' : stage === 'mid_review' ? 'Mid-review submitted' : 'Final submission sent',
+            );
             await refresh();
         } catch (err: any) {
             toast.error(errorMessage(err, 'Submission failed'));
@@ -293,6 +401,58 @@ return;
                             </p>
                         </div>
 
+                        {project.status === 'in_progress' && (
+                            <div className="space-y-3 rounded-xl border border-border bg-card p-5">
+                                <h2 className="text-base font-medium">Mid-review</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Send a short progress summary to your supervisor for the mid-review checkpoint.
+                                </p>
+                                <textarea
+                                    rows={3}
+                                    className={textareaClass}
+                                    placeholder="Progress summary: what is done, what is next, any blockers"
+                                    value={midSummary}
+                                    onChange={(e) => setMidSummary(e.target.value)}
+                                />
+                                <Button variant="secondary" onClick={() => submitStage('mid_review')} disabled={busy !== null || !midSummary.trim()}>
+                                    {busy === 'mid_review' ? 'Submitting...' : 'Submit mid-review'}
+                                </Button>
+                            </div>
+                        )}
+
+                        {evaluation && (evaluation.resultConfirmed || evaluation.defense || evaluation.evaluationConflict) && (
+                            <div className="space-y-2 rounded-xl border border-border bg-card p-5">
+                                <h2 className="text-base font-medium">Evaluation</h2>
+                                {evaluation.evaluationConflict && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Your supervisor and examiner disagreed on the result. A department admin is resolving it.
+                                    </p>
+                                )}
+                                {evaluation.resultConfirmed && (
+                                    <div className="space-y-1 text-sm">
+                                        {(evaluation.reviews ?? []).map((r) => (
+                                            <p key={r.id} className="flex justify-between gap-4">
+                                                <span className="text-muted-foreground">
+                                                    {r.reviewerName ?? 'Reviewer'} ({(r.reviewer_role ?? '').replace(/_/g, ' ')})
+                                                </span>
+                                                <span className="font-medium">
+                                                    {r.weightedTotal != null ? `${r.weightedTotal} / 100` : 'No rubric scores'}
+                                                </span>
+                                            </p>
+                                        ))}
+                                        <p className="text-xs text-muted-foreground">Per-criterion marks are in the submission history below.</p>
+                                    </div>
+                                )}
+                                {evaluation.defense && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Defense: {evaluation.defense.scheduledAt ? new Date(evaluation.defense.scheduledAt).toLocaleString() : ''}
+                                        {evaluation.defense.venue ? ` · ${evaluation.defense.venue}` : ''}
+                                        {evaluation.defense.note ? ` · ${evaluation.defense.note}` : ''}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         <div className="space-y-3">
                             <h2 className="text-base font-medium">Submission history</h2>
                             {(submissions ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nothing submitted yet.</p>}
@@ -315,11 +475,32 @@ return;
                                         <div key={r.id} className="mt-3 rounded-lg bg-muted px-3 py-2 text-sm">
                                             <span className="font-medium">{r.reviewerName ?? 'Reviewer'}</span> · {r.decision}
                                             {r.comment && <p className="mt-1 text-muted-foreground">{r.comment}</p>}
+                                            {r.scores && r.scores.length > 0 && (
+                                                <div className="mt-2 space-y-0.5 border-t border-border/60 pt-2 text-[13px]">
+                                                    {r.scores.map((sc) => (
+                                                        <p key={sc.criterion_key} className="flex justify-between gap-4">
+                                                            <span className="text-muted-foreground">
+                                                                {evaluation?.rubricTemplate?.criteria.find((c) => c.key === sc.criterion_key)?.label ??
+                                                                    sc.criterion_key.replace(/_/g, ' ')}
+                                                            </span>
+                                                            <span className="font-medium">{sc.score}</span>
+                                                        </p>
+                                                    ))}
+                                                    {r.weightedTotal != null && (
+                                                        <p className="flex justify-between gap-4 font-medium">
+                                                            <span>Weighted total</span>
+                                                            <span>{r.weightedTotal} / 100</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             ))}
                         </div>
+
+                        <LogbookSection projectId={project.id} />
                     </>
                 )}
             </div>

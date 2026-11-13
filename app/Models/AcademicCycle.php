@@ -51,6 +51,12 @@ class AcademicCycle extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /** @return BelongsTo<RubricTemplate, $this> */
+    public function rubricTemplate(): BelongsTo
+    {
+        return $this->belongsTo(RubricTemplate::class, 'rubric_template_id');
+    }
+
     /** @return HasMany<Team, $this> */
     public function teams(): HasMany
     {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AcademicCycleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CohortImportController;
+use App\Http\Controllers\InviteActivationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DepartmentController;
@@ -18,6 +19,11 @@ use Illuminate\Support\Facades\Route;
 
 // Welcome / landing
 Route::inertia('/', 'welcome')->name('home');
+
+// Invite activation for CSV-imported accounts (spec WF2). Public on purpose:
+// the unguessable token in the link is the credential at this step.
+Route::get('/invite/activate/{token}', [InviteActivationController::class, 'show'])->name('invite.activate');
+Route::post('/invite/activate/{token}', [InviteActivationController::class, 'store'])->name('invite.activate.store');
 
 // ─── Public API (no auth required for browsing) ──────────────────────────────
 Route::prefix('api')->group(function () {

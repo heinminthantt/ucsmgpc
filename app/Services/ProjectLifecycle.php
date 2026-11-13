@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Mail\ProjectNotificationMail;
 use App\Models\Project;
 use App\Models\ProjectNotification;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
@@ -98,9 +100,9 @@ class ProjectLifecycle
     }
 
     /**
-     * In-app notifications for a transition (spec section 8).
-     * Email delivery is NOT wired in Phase 1 foundation; these
-     * ProjectNotification rows are what the existing notifications UI reads.
+     * Notifications for a transition (spec section 8): an in-app
+     * ProjectNotification row (what the notifications UI reads) plus a
+     * queued email to the same recipient, created together in notifyUser().
      */
     private function notify(Project $project, string $from, string $to, ?User $actor, ?string $comment): void
     {
@@ -183,6 +185,65 @@ class ProjectLifecycle
             'approver_name' => $actorName,
             'rejection_reason' => $reason,
         ]);
+
+        // Spec section 8: the same notification also goes out as a queued
+        // email. Inactive accounts are skipped (minimal status respect);
+        // an email failure must never block the lifecycle action itself.
+        $recipient = User::find($recipientId);
+        if ($recipient && $recipient->is_active && filled($recipient->email)) {
+            Mail::to($recipient)->queue(new ProjectNotificationMail(
+                projectTitle: $project->title,
+                messageText: $message,
+                actorName: $actorName,
+                notificationType: $type,
+                projectUrl: route('projects.show-page', $project),
+                reason: $reason,
+            ));
+        }
+    }
+
+    /**
+     * Supervisor capacity guard for proposal acceptance (spec 6.4).
+     *
+     * Returns a human-readable block reason when accepting this project's
+     * proposal would push its supervisor to/over the cycle capacity, or
+     * null when the accept may proceed. Dept admins and system admins are
+     * the override path and are never blocked here. Capacity comes from
+     * the project's academic cycle; without a cycle (or no capacity set)
+     * there is nothing configured to enforce, so it returns null — the
+     * count query below still scopes by cycle when one exists and by the
+     * supervisor's non-archived active projects when it does not.
+     */
+    public function capacityBlockReason(Project $project, ?User $actor = null): ?string
+    {
+        if (! $project->supervisor_id) {
+            return null;
+        }
+
+        if ($actor && ($actor->isAdmin() || $actor->isDepartmentAdmin())) {
+            return null;
+        }
+
+        $capacity = $project->cycle?->supervisor_capacity;
+        if (! $capacity || (int) $capacity < 1) {
+            return null;
+        }
+
+        // Projects this supervisor already carries past proposal acceptance.
+        $active = ['in_progress', 'mid_review_submitted', 'final_submitted', 'under_evaluation', 'revision_required', 'approved_published'];
+
+        $count = Project::query()
+            ->where('supervisor_id', $project->supervisor_id)
+            ->where('id', '!=', $project->id)
+            ->whereIn('status', $active)
+            ->when($project->cycle_id, fn ($q) => $q->where('cycle_id', $project->cycle_id))
+            ->count();
+
+        if ($count >= (int) $capacity) {
+            return "This supervisor already supervises {$count} active team(s) in this cycle, which reaches the cycle capacity of {$capacity}. A department admin can accept this proposal as an override.";
+        }
+
+        return null;
     }
 
     /** Notify the project owner and every confirmed team member, once each. */

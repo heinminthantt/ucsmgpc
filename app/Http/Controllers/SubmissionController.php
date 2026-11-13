@@ -6,9 +6,11 @@ use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\Review;
 use App\Models\Submission;
+use App\Models\User;
 use App\Services\ProjectLifecycle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -46,7 +48,7 @@ class SubmissionController extends Controller
             'payload' => 'nullable|array',
         ]);
 
-        $fields = \Illuminate\Support\Arr::except($validated, ['payload']);
+        $fields = Arr::except($validated, ['payload']);
         if ($fields) {
             $project->update($fields);
         }
@@ -85,7 +87,7 @@ class SubmissionController extends Controller
 
         $stage = (string) $validated['stage'];
 
-        $draftFields = \Illuminate\Support\Arr::except($validated, ['stage', 'payload', 'project_files', 'file_kind']);
+        $draftFields = Arr::except($validated, ['stage', 'payload', 'project_files', 'file_kind']);
         if ($draftFields) {
             $project->update($draftFields);
             $project->refresh();
@@ -273,6 +275,15 @@ class SubmissionController extends Controller
             ], 422);
         }
 
+        // Spec 6.4: supervisor capacity is enforced when a proposal is
+        // accepted (dept admins / admins reviewing are the override path).
+        if ($submission->stage === 'proposal' && $decision === 'accept') {
+            $block = $lifecycle->capacityBlockReason($project, $reviewer);
+            if ($block !== null) {
+                return response()->json(['message' => $block], 422);
+            }
+        }
+
         $review = DB::transaction(function () use ($submission, $project, $reviewer, $decision, $comment, $submissionStatus, $target, $lifecycle) {
             $review = Review::updateOrCreate(
                 ['submission_id' => $submission->id, 'reviewer_id' => $reviewer->id],
@@ -330,7 +341,7 @@ class SubmissionController extends Controller
         };
     }
 
-    private function reviewerRole(Project $project, \App\Models\User $reviewer): string
+    private function reviewerRole(Project $project, User $reviewer): string
     {
         if ($reviewer->isAdmin()) {
             return 'admin';

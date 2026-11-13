@@ -22,14 +22,14 @@
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {
-                background-color: #f7f3ea;
+                background-color: #f7f8f4;
             }
 
             html.dark {
-                background-color: #121a24;
+                background-color: #1f2825;
             }
         </style>
-        <meta name="theme-color" content="#0e1e33">
+        <meta name="theme-color" content="#283833">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.png" type="image/png" sizes="96x96">

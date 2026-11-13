@@ -60,7 +60,7 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
 
             {/* Form panel */}
             <div className="flex min-h-svh flex-col">
-                <div className="flex items-center justify-between px-5 py-5 sm:px-8">
+                <div className="flex items-center justify-between px-5 py-4 sm:px-8">
                     <Link href={home()} className="flex items-center gap-2.5 lg:invisible">
                         <AppLogoIcon className="size-8 shrink-0 object-contain" />
                         <span className="font-display text-[15px] font-semibold">UCSMGY</span>
@@ -74,24 +74,24 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                     </div>
                 </div>
 
-                <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
+                <main className="flex min-h-0 flex-1 items-center justify-center px-5 py-4 sm:px-8 sm:py-6">
                     <div className="w-full max-w-sm">
                         <p className="text-[10px] font-medium tracking-[0.22em] text-gold uppercase">
                             {t('welcome.archive')}
                         </p>
-                        <h1 className="font-display mt-4 text-3xl leading-tight text-foreground">
+                        <h1 className="font-display mt-2 text-2xl leading-tight text-foreground sm:text-3xl">
                             {title}
                         </h1>
                         {description && (
-                            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                            <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                                 {description}
                             </p>
                         )}
-                        <div className="mt-8">{children}</div>
+                        <div className="mt-5">{children}</div>
                     </div>
                 </main>
 
-                <footer className="px-5 py-5 text-center text-[11px] text-muted-foreground sm:px-8">
+                <footer className="px-5 py-2 text-center text-[11px] text-muted-foreground sm:px-8 sm:py-3">
                     {t('auth.footer')}
                 </footer>
             </div>

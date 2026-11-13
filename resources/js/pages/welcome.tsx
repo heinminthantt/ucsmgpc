@@ -57,9 +57,6 @@ export default function Welcome({ auth }: Props) {
                             <a href="#about" className="text-muted-foreground transition-colors hover:text-foreground">
                                 {t('welcome.about_link')}
                             </a>
-                            <a href="#features" className="text-muted-foreground transition-colors hover:text-foreground">
-                                {t('welcome.features_link')}
-                            </a>
                         </nav>
 
                         <div className="flex items-center gap-2">
@@ -172,7 +169,8 @@ export default function Welcome({ auth }: Props) {
                     </section>
 
                     {/* Capabilities */}
-                    <section id="features" className="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-20">
+                    <section id="features" className="mx-auto max-w-6xl scroll-mt-28 px-5 py-16 sm:px-6 lg:py-20">
+                        <div id="about" className="scroll-mt-28" />
                         <div className="max-w-2xl">
                             <h2 className="font-display text-3xl leading-tight text-foreground sm:text-4xl">
                                 {t('welcome.about_title')}
@@ -182,7 +180,7 @@ export default function Welcome({ auth }: Props) {
                             </p>
                         </div>
 
-                        <div id="about" className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
+                        <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
                             {featureKeys.map((f, i) => (
                                 <article key={f.title} className="border-t border-border pt-5">
                                     <div className="flex items-center justify-between">

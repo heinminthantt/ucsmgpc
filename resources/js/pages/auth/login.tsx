@@ -28,22 +28,22 @@ export default function Login({ status, canResetPassword }: Props) {
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-5"
             >
                 {({ processing, errors }) => (
                     <>
                         {status && (
                             <div
                                 role="status"
-                                className="rounded-sm bg-emerald-600/10 border border-emerald-600/30 px-4 py-3 text-sm text-emerald-600 flex items-center gap-2"
+                                className="rounded-sm bg-emerald-600/10 border border-emerald-600/30 px-4 py-2.5 text-sm text-emerald-600 flex items-center gap-2"
                             >
                                 <Icon icon="mdi:check-circle-outline" className="shrink-0" />
                                 {status}
                             </div>
                         )}
 
-                        <div className="grid gap-5">
-                            <div className="grid gap-2">
+                        <div className="grid gap-4">
+                            <div className="grid gap-1.5">
                                 <Label htmlFor="email">{t('auth.email')}</Label>
                                 <Input
                                     id="email"
@@ -61,7 +61,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <InputError id="email-error" message={errors.email} />
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="grid gap-1.5">
                                 <div className="flex items-center justify-between">
                                     <Label htmlFor="password">{t('auth.password')}</Label>
                                     {canResetPassword && (
@@ -87,9 +87,9 @@ export default function Login({ status, canResetPassword }: Props) {
                             </div>
 
                             <div className="flex items-center gap-2.5">
-                                <Checkbox 
-                                    id="remember-ui" 
-                                    tabIndex={3} 
+                                <Checkbox
+                                    id="remember-ui"
+                                    tabIndex={3}
                                     checked={remember}
                                     onCheckedChange={(c) => setRemember(c === true)}
                                 />
@@ -108,12 +108,6 @@ export default function Login({ status, canResetPassword }: Props) {
                                 {processing ? <Spinner /> : <Icon icon="mdi:login-variant" className="text-base" />}
                                 {processing ? t('auth.signing_in') : t('auth.log_in')}
                             </Button>
-                        </div>
-
-                        {/* Ruled separator with centered glyph */}
-                        <div className="relative text-center" aria-hidden="true">
-                            <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                            <span className="relative bg-background px-3 text-[8px] text-gold">◆</span>
                         </div>
 
                         <p className="text-center text-sm text-muted-foreground">

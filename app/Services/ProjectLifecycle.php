@@ -1,0 +1,205 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Project;
+use App\Models\ProjectNotification;
+use App\Models\User;
+use InvalidArgumentException;
+
+/**
+ * The ONLY place a project's lifecycle status changes (spec 9.3 / NF15).
+ *
+ * Controllers and other services must call transition() instead of setting
+ * Project::$status or Project::$approval_status directly. The legacy
+ * approval_status column is kept in sync here so the existing React screens
+ * and supervisor endpoints keep working during the Phase 1 transition.
+ *
+ * Transitions enforced are spec section 5.2, Phase 1 set, plus the
+ * mid-review checkpoint pair (in_progress <-> mid_review_submitted).
+ */
+class ProjectLifecycle
+{
+    /** @var array<string, string[]> from-status => allowed to-statuses */
+    public const TRANSITIONS = [
+        'draft' => ['proposal_submitted'],
+        'proposal_submitted' => ['proposal_changes_requested', 'in_progress', 'proposal_declined'],
+        'proposal_changes_requested' => ['proposal_submitted'],
+        'proposal_declined' => ['draft'],
+        'in_progress' => ['mid_review_submitted', 'final_submitted'],
+        'mid_review_submitted' => ['in_progress'],
+        'final_submitted' => ['under_evaluation'],
+        'under_evaluation' => ['revision_required', 'approved_published', 'not_passed'],
+        'revision_required' => ['final_submitted'],
+        'approved_published' => ['archived'],
+        'not_passed' => [],
+        'archived' => [],
+    ];
+
+    /** Lifecycle status => legacy approval_status value kept in sync. */
+    private const APPROVAL_SYNC = [
+        'approved_published' => 'approved',
+        'proposal_declined' => 'rejected',
+        'not_passed' => 'rejected',
+        // 'archived' deliberately absent: archiving keeps whatever
+        // approval_status the project had (published stays approved).
+    ];
+
+    public function canTransition(Project $project, string $to): bool
+    {
+        $from = $project->status ?: 'draft';
+
+        return in_array($to, self::TRANSITIONS[$from] ?? [], true);
+    }
+
+    /**
+     * Move a project to a new lifecycle status, sync the legacy column,
+     * stamp publication fields where relevant, and notify per spec 8.
+     *
+     * @throws InvalidArgumentException when the transition is not allowed.
+     */
+    public function transition(Project $project, string $to, ?User $actor = null, ?string $comment = null): Project
+    {
+        $from = $project->status ?: 'draft';
+
+        if (! $this->canTransition($project, $to)) {
+            throw new InvalidArgumentException(
+                "Project #{$project->id} cannot move from '{$from}' to '{$to}'."
+            );
+        }
+
+        $updates = ['status' => $to];
+
+        if (array_key_exists($to, self::APPROVAL_SYNC)) {
+            $updates['approval_status'] = self::APPROVAL_SYNC[$to];
+        } elseif ($to !== 'archived') {
+            // Every working state is "pending" in the legacy vocabulary.
+            $updates['approval_status'] = 'pending';
+        }
+
+        if ($to === 'approved_published') {
+            $updates['published_at'] = now();
+            $updates['approved_at'] = $project->approved_at ?? now();
+            if ($actor) {
+                $updates['approved_by'] = $actor->id;
+            }
+        }
+
+        $project->update($updates);
+
+        if ($to === 'in_progress' && $project->team_id && $project->team) {
+            // Spec 6.4: accepting a proposal locks team membership (TM4).
+            $project->team->update(['status' => 'locked']);
+        }
+
+        $this->notify($project, $from, $to, $actor, $comment);
+
+        return $project;
+    }
+
+    /**
+     * In-app notifications for a transition (spec section 8).
+     * Email delivery is NOT wired in Phase 1 foundation; these
+     * ProjectNotification rows are what the existing notifications UI reads.
+     */
+    private function notify(Project $project, string $from, string $to, ?User $actor, ?string $comment): void
+    {
+        $title = $project->title;
+        $actorName = $actor?->name;
+
+        $toTeam = fn (string $message, string $type, ?string $reason = null) => $this->notifyTeam(
+            $project, $message, $type, $actorName, $reason
+        );
+
+        switch ($to) {
+            case 'proposal_submitted':
+                if ($project->supervisor_id) {
+                    $this->notifyUser($project, $project->supervisor_id,
+                        ($from === 'proposal_changes_requested' ? 'A project was resubmitted for your review: "'.$title.'".' : 'A new proposal was submitted for your review: "'.$title.'".'),
+                        'submission', $actorName);
+                }
+                break;
+
+            case 'proposal_changes_requested':
+                $toTeam('Changes were requested on your proposal for "'.$title.'". You can edit it and resubmit.', 'review', $comment);
+                break;
+
+            case 'proposal_declined':
+                $toTeam('Your proposal for "'.$title.'" was declined. You can revise it and submit a new proposal, or request a different supervisor.', 'rejection', $comment);
+                break;
+
+            case 'in_progress':
+                // Reached either by a mid-review checkpoint return (from
+                // mid_review_submitted) or by proposal acceptance.
+                if ($from === 'mid_review_submitted') {
+                    $toTeam('Mid-review feedback was recorded for "'.$title.'". Your project continues in progress.', 'review', $comment);
+                } else {
+                    $toTeam('Your proposal for "'.$title.'" was accepted. Your project is now in progress.', 'approval');
+                }
+                break;
+
+            case 'mid_review_submitted':
+            case 'final_submitted':
+                if ($project->supervisor_id) {
+                    $label = $to === 'final_submitted' ? 'final submission' : 'mid-review report';
+                    $this->notifyUser($project, $project->supervisor_id,
+                        'A '.$label.' was submitted for "'.$title.'".', 'submission', $actorName);
+                }
+                break;
+
+            case 'under_evaluation':
+                if ($project->examiner_id) {
+                    $this->notifyUser($project, $project->examiner_id,
+                        'A project is ready for your evaluation: "'.$title.'".', 'evaluation', $actorName);
+                }
+                break;
+
+            case 'revision_required':
+                $toTeam('Revision was required after evaluation of "'.$title.'". You can fix it and resubmit the final package.', 'review', $comment);
+                break;
+
+            case 'approved_published':
+                $toTeam('Your project "'.$title.'" passed and is now published in the catalog.', 'approval');
+                break;
+
+            case 'not_passed':
+                $toTeam('The final result for "'.$title.'" was recorded as not passed.', 'rejection', $comment);
+                break;
+
+            default:
+                // draft / archived: no notification required by the spec.
+                break;
+        }
+    }
+
+    private function notifyUser(Project $project, int $recipientId, string $message, string $type, ?string $actorName = null, ?string $reason = null): void
+    {
+        ProjectNotification::create([
+            'recipient_user_id' => $recipientId,
+            'message' => $message,
+            'project_id' => $project->id,
+            'notification_type' => $type,
+            'project_title' => $project->title,
+            'approver_name' => $actorName,
+            'rejection_reason' => $reason,
+        ]);
+    }
+
+    /** Notify the project owner and every confirmed team member, once each. */
+    private function notifyTeam(Project $project, string $message, string $type, ?string $actorName = null, ?string $reason = null): void
+    {
+        $recipientIds = collect([$project->user_id]);
+
+        if ($project->team_id && $project->team) {
+            $recipientIds = $recipientIds->merge(
+                $project->team->memberships()
+                    ->where('invite_status', 'confirmed')
+                    ->pluck('user_id')
+            );
+        }
+
+        foreach ($recipientIds->filter()->unique() as $recipientId) {
+            $this->notifyUser($project, (int) $recipientId, $message, $type, $actorName, $reason);
+        }
+    }
+}

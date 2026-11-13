@@ -13,6 +13,21 @@
 
 namespace App\Models{
 /**
+ * @property-read \App\Models\User|null $creator
+ * @property-read \App\Models\Department|null $department
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $projects
+ * @property-read int|null $projects_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Team> $teams
+ * @property-read int|null $teams_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicCycle newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicCycle newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicCycle query()
+ */
+	class AcademicCycle extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @property int $id
  * @property int $project_id
  * @property int $user_id
@@ -67,8 +82,12 @@ namespace App\Models{
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Course> $courses
  * @property-read int|null $courses_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AcademicCycle> $cycles
+ * @property-read int|null $cycles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $projects
  * @property-read int|null $projects_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read int|null $users_count
  * @method static \Database\Factories\DepartmentFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newQuery()
@@ -130,7 +149,9 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
  * @property-read \App\Models\Course|null $course
+ * @property-read \App\Models\AcademicCycle|null $cycle
  * @property-read \App\Models\Department|null $department
+ * @property-read \App\Models\User|null $examiner
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectFile> $files
  * @property-read int|null $files_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Member> $members
@@ -141,9 +162,12 @@ namespace App\Models{
  * @property-read int|null $reactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SavedProject> $savedByUsers
  * @property-read int|null $saved_by_users_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Submission> $submissions
+ * @property-read int|null $submissions_count
  * @property-read \App\Models\User|null $supervisor
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tag> $tags
  * @property-read int|null $tags_count
+ * @property-read \App\Models\Team|null $team
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project approved()
  * @method static \Database\Factories\ProjectFactory factory($count = null, $state = [])
@@ -151,6 +175,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project pending()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Project published()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereAcademicYear($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereApprovalStatus($value)
@@ -187,6 +212,7 @@ namespace App\Models{
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property-read \App\Models\Project $project
+ * @property-read \App\Models\Submission|null $submission
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProjectFile newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProjectFile newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProjectFile query()
@@ -263,6 +289,17 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property-read \App\Models\User|null $reviewer
+ * @property-read \App\Models\Submission|null $submission
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Review newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Review newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Review query()
+ */
+	class Review extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @property int $id
  * @property int $project_id
  * @property int $user_id
@@ -280,6 +317,21 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SavedProject whereUserId($value)
  */
 	class SavedProject extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectFile> $files
+ * @property-read int|null $files_count
+ * @property-read \App\Models\Project|null $project
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+ * @property-read int|null $reviews_count
+ * @property-read \App\Models\User|null $submitter
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Submission newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Submission newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Submission query()
+ */
+	class Submission extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -303,6 +355,41 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $confirmedMembers
+ * @property-read int|null $confirmed_members_count
+ * @property-read \App\Models\AcademicCycle|null $cycle
+ * @property-read \App\Models\User|null $leader
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $members
+ * @property-read int|null $members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TeamUser> $memberships
+ * @property-read int|null $memberships_count
+ * @property-read \App\Models\Project|null $project
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team query()
+ */
+	class Team extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * One row of the team_user pivot, as a plain model so invites can be
+ * addressed by id (POST /api/team-invites/{invite}/confirm|decline).
+ *
+ * The pivot has no created_at/updated_at columns; invited_at and
+ * confirmed_at carry the timing instead.
+ *
+ * @property-read \App\Models\Team|null $team
+ * @property-read \App\Models\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamUser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamUser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamUser query()
+ */
+	class TeamUser extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @property int $id
  * @property string $name
  * @property string $email
@@ -320,16 +407,29 @@ namespace App\Models{
  * @property bool $is_active
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
+ * @property-read \App\Models\Department|null $department
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $examinedProjects
+ * @property-read int|null $examined_projects_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Team> $ledTeams
+ * @property-read int|null $led_teams_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $projects
  * @property-read int|null $projects_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Reaction> $reactions
  * @property-read int|null $reactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+ * @property-read int|null $reviews_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SavedProject> $savedProjects
  * @property-read int|null $saved_projects_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Submission> $submissions
+ * @property-read int|null $submissions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $supervisedProjects
  * @property-read int|null $supervised_projects_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TeamUser> $teamMemberships
+ * @property-read int|null $team_memberships_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Team> $teams
+ * @property-read int|null $teams_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()

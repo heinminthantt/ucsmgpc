@@ -1,16 +1,13 @@
-import { Link, router } from '@inertiajs/react';
 import { Icon } from '@iconify/react';
-import { useMe, useUnreadCount } from '@/hooks/useCatalog';
-import { useAppearance } from '@/hooks/use-appearance';
-import { Button, Avatar, AvatarFallback, AvatarImage } from 'journal-ds';
-import { cn } from '@/lib/utils';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { dashboard, login, register } from '@/routes';
+import { Button, Avatar, AvatarFallback, AvatarImage } from '@/components/ui';
+import { useMe, useUnreadCount } from '@/hooks/useCatalog';
+import { login, register } from '@/routes';
 
 export function CatalogNavbar() {
     const { data: user } = useMe();
     const { data: unread } = useUnreadCount();
-    const { appearance, updateAppearance } = useAppearance();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navLinks = [
@@ -31,11 +28,11 @@ export function CatalogNavbar() {
     ];
 
     return (
-        <header className="sticky top-0 z-50 border-b border-journal-rule backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--journal-paper) 95%, transparent)' }}>
+        <header className="sticky top-0 z-50 border-b border-border backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--background) 95%, transparent)' }}>
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <span className="font-display font-bold text-lg text-journal-burgundy tracking-tight">
+                    <span className="font-bold text-lg text-primary tracking-tight">
                         Project Catalog
                     </span>
                 </Link>
@@ -46,7 +43,7 @@ export function CatalogNavbar() {
                         <Link
                             key={l.href}
                             href={l.href}
-                            className="flex items-center gap-1.5 rounded-sm px-3.5 py-2 font-serif text-sm text-journal-ink-light transition-colors hover:bg-journal-warm/40 hover:text-journal-burgundy"
+                            className="flex items-center gap-1.5 rounded-sm px-3.5 py-2 text-sm text-foreground-light transition-colors hover:bg-muted/40 hover:text-primary"
                         >
                             <Icon icon={l.icon} className="text-base" />
                             {l.label}
@@ -63,11 +60,11 @@ export function CatalogNavbar() {
                             {/* Notifications */}
                             <Link
                                 href="/notifications"
-                                className="relative rounded-sm p-2 text-journal-sepia hover:bg-journal-warm/40 hover:text-journal-burgundy transition-colors"
+                                className="relative rounded-sm p-2 text-muted-foreground hover:bg-muted/40 hover:text-primary transition-colors"
                             >
                                 <Icon icon="mdi:bell-outline" className="text-lg" />
                                 {(unread?.count ?? 0) > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-journal-burgundy text-[10px] font-bold text-journal-paper">
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-background">
                                         {unread!.count > 9 ? '9+' : unread!.count}
                                     </span>
                                 )}
@@ -76,13 +73,13 @@ export function CatalogNavbar() {
                             {/* Profile */}
                             <Link
                                 href="/profile"
-                                className="flex items-center gap-2 rounded-sm px-3 py-1.5 font-serif text-sm text-journal-ink-light hover:bg-journal-warm/40 hover:text-journal-burgundy transition-colors"
+                                className="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-foreground-light hover:bg-muted/40 hover:text-primary transition-colors"
                             >
                                 <Avatar className="h-7 w-7">
                                     {user.avatar_url ? (
                                         <AvatarImage src={user.avatar_url} alt={user.name} className="object-cover" />
                                     ) : (
-                                        <AvatarFallback className="text-xs font-bold bg-journal-burgundy text-journal-paper">
+                                        <AvatarFallback className="text-xs font-bold bg-primary text-background">
                                             {user.name[0].toUpperCase()}
                                         </AvatarFallback>
                                     )}
@@ -93,7 +90,7 @@ export function CatalogNavbar() {
                             {/* Logout */}
                             <button
                                 onClick={() => router.post('/logout')}
-                                className="rounded-sm p-2 text-journal-sepia hover:bg-journal-warm/40 hover:text-journal-burgundy transition-colors"
+                                className="rounded-sm p-2 text-muted-foreground hover:bg-muted/40 hover:text-primary transition-colors"
                                 aria-label="Logout"
                             >
                                 <Icon icon="mdi:logout" className="text-lg" />
@@ -102,17 +99,17 @@ export function CatalogNavbar() {
                     ) : (
                         <div className="flex items-center gap-2">
                             <Link href={login()}>
-                                <Button variant="ghost" size="sm" className="font-serif">Log in</Button>
+                                <Button variant="ghost" size="sm" className="">Log in</Button>
                             </Link>
                             <Link href={register()}>
-                                <Button size="sm" className="font-serif">Sign up</Button>
+                                <Button size="sm" className="">Sign up</Button>
                             </Link>
                         </div>
                     )}
 
                     {/* Mobile menu button */}
                     <button
-                        className="rounded-sm p-2 text-journal-sepia hover:bg-journal-warm/40 md:hidden"
+                        className="rounded-sm p-2 text-muted-foreground hover:bg-muted/40 md:hidden"
                         onClick={() => setMobileOpen(!mobileOpen)}
                     >
                         <Icon icon={mobileOpen ? 'mdi:close' : 'mdi:menu'} className="text-xl" />
@@ -122,14 +119,14 @@ export function CatalogNavbar() {
 
             {/* Mobile menu */}
             {mobileOpen && (
-                <div className="border-t border-journal-rule bg-journal-paper px-6 py-4 md:hidden">
+                <div className="border-t border-border bg-background px-6 py-4 md:hidden">
                     <nav className="flex flex-col gap-1">
                         {navLinks.map((l) => (
                             <Link
                                 key={l.href}
                                 href={l.href}
                                 onClick={() => setMobileOpen(false)}
-                                className="flex items-center gap-2 rounded-sm px-3.5 py-2.5 font-serif text-sm text-journal-ink-light hover:bg-journal-warm/40 hover:text-journal-burgundy transition-colors"
+                                className="flex items-center gap-2 rounded-sm px-3.5 py-2.5 text-sm text-foreground-light hover:bg-muted/40 hover:text-primary transition-colors"
                             >
                                 <Icon icon={l.icon} className="text-base" />
                                 {l.label}

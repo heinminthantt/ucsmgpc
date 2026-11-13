@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter';
 import { createInertiaApp } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -18,7 +19,7 @@ const queryClient = new QueryClient({
     },
 });
 
-const appName = import.meta.env.VITE_APP_NAME || 'Project Catalog';
+const appName = import.meta.env.VITE_APP_NAME || 'UCSM Project Catalog';
 
 createInertiaApp({
     title: (title) => (title ? `${title} — ${appName}` : appName),
@@ -46,7 +47,7 @@ createInertiaApp({
         );
     },
     progress: {
-        color: 'oklch(0.38 0.12 15)',
+        color: '#c15f3c',
     },
 });
 

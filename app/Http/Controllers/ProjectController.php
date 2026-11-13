@@ -85,12 +85,23 @@ class ProjectController extends Controller
 
     public function show(Project $project): JsonResponse
     {
+        // Spec FX-API1: the public API returns published projects only.
+        // Unpublished projects 404 here so their existence is not leaked.
+        if (!$project->isPublished()) {
+            abort(404);
+        }
         $project->load(['user', 'department', 'course', 'supervisor', 'tags', 'files', 'approvedBy']);
         return response()->json($this->formatProject($project));
     }
 
     public function showPage(Project $project): Response
     {
+        // Published projects are public; unpublished ones are visible only
+        // to their team and assigned staff (spec 3.3). Everyone else gets a
+        // 404 rather than a 403 for the same no-leak reason as the API.
+        if (!$project->canBeViewedBy(Auth::user())) {
+            abort(404);
+        }
         $project->load(['user', 'department', 'course', 'supervisor', 'tags', 'files', 'approvedBy']);
         return Inertia::render('projects/show', [
             'project' => $this->formatProject($project),
@@ -117,6 +128,8 @@ class ProjectController extends Controller
             'course_id' => 'required|exists:courses,id',
             'supervisor_id' => 'nullable|exists:users,id',
             'members_json' => 'nullable|json',
+            'cycle_id' => 'nullable|exists:academic_cycles,id',
+            'team_id' => 'nullable|exists:teams,id',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
@@ -125,7 +138,12 @@ class ProjectController extends Controller
         $project = Project::create([
             ...$validated,
             'user_id' => Auth::id(),
+            // Legacy form = a finished-project submission, so the legacy
+            // approval flag stays 'pending' for the old screens, while the
+            // new lifecycle status starts at proposal_submitted to match
+            // what the old 'pending' meant (waiting for a supervisor).
             'approval_status' => 'pending',
+            'status' => 'proposal_submitted',
         ]);
 
         // Handle tags
@@ -295,6 +313,11 @@ class ProjectController extends Controller
             'supervisorId' => $project->supervisor_id,
             'supervisorName' => $project->supervisor?->name,
             'approvalStatus' => strtoupper($project->approval_status),
+            'status' => $project->status,
+            'cycleId' => $project->cycle_id,
+            'teamId' => $project->team_id,
+            'examinerId' => $project->examiner_id,
+            'publishedAt' => $project->published_at?->toISOString(),
             'approvedAt' => $project->approved_at?->toISOString(),
             'approvedById' => $project->approved_by,
             'approvedByName' => $project->approvedBy?->name,

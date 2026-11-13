@@ -59,7 +59,6 @@
         "date-fns": "^4.4.0",
         "globals": "^15.14.0",
         "input-otp": "^1.4.2",
-        "journal-ds": "^1.0.0",
         "laravel-vite-plugin": "^3.0.0",
         "lucide-react": "^0.475.0",
         "next-themes": "^0.4.6",

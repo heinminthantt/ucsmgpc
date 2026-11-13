@@ -22,7 +22,7 @@ class SavedProjectController extends Controller
             ->with(['project.tags', 'project.department', 'project.course', 'project.supervisor', 'project.files', 'project.user'])
             ->latest()
             ->get()
-            ->map(fn($s) => $s->project ? (new ProjectController)->formatProjectPublic($s->project) : null)
+            ->map(fn($s) => ($s->project && $s->project->isPublished()) ? (new ProjectController)->formatProjectPublic($s->project) : null)
             ->filter()
             ->values();
 
@@ -42,6 +42,7 @@ class SavedProjectController extends Controller
     {
         $request->validate(['project_id' => 'required|exists:projects,id']);
 
+        $project = \App\Models\Project::findOrFail($request->project_id);
         $existing = SavedProject::where('project_id', $request->project_id)
             ->where('user_id', Auth::id())
             ->first();
@@ -49,6 +50,10 @@ class SavedProjectController extends Controller
         if ($existing) {
             $existing->delete();
             return response()->json(['saved' => false]);
+        }
+
+        if (!$project->isPublished()) {
+            return response()->json(['message' => 'Only published projects can be saved.'], 422);
         }
 
         SavedProject::create([

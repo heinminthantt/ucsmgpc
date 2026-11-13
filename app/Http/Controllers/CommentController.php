@@ -13,6 +13,10 @@ class CommentController extends Controller
 {
     public function index(Project $project): JsonResponse
     {
+        // Comments live on published projects only (spec 10.2).
+        if (!$project->isPublished() && !$project->canBeViewedBy(Auth::user())) {
+            abort(404);
+        }
         $comments = $project->comments()
             ->with('user:id,name,avatar_url')
             ->latest()
@@ -35,6 +39,11 @@ class CommentController extends Controller
             'project_id' => 'required|exists:projects,id',
             'comment' => 'required|string|max:1000',
         ]);
+
+        $target = Project::findOrFail($validated['project_id']);
+        if (!$target->isPublished()) {
+            return response()->json(['message' => 'Comments are only open on published projects.'], 422);
+        }
 
         $comment = Comment::create([
             'project_id' => $validated['project_id'],

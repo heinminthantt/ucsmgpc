@@ -1,7 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Icon } from '@iconify/react';
 import type { PropsWithChildren } from 'react';
-import { Button, Separator, Heading, Text } from 'journal-ds';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -10,68 +8,43 @@ import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
+    { title: 'Profile', href: edit(), icon: null },
+    { title: 'Security', href: editSecurity(), icon: null },
+    { title: 'Appearance', href: editAppearance(), icon: null },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="mx-auto max-w-5xl px-6 lg:px-8 py-12">
+        <div>
             <div className="mb-8">
-                <Heading level="h1" className="text-3xl text-journal-ink">Settings</Heading>
-                <Text variant="muted" className="mt-1">Manage your profile and account settings</Text>
+                <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Manage your profile and account settings</p>
             </div>
 
-            <Separator className="mb-8" />
-
-            <div className="flex flex-col lg:flex-row lg:gap-12">
-                <aside className="w-full max-w-xl lg:w-52 shrink-0">
-                    <nav
-                        className="flex flex-col gap-1"
-                        aria-label="Settings"
-                    >
+            <div className="flex flex-col gap-8 lg:flex-row">
+                <aside className="w-full shrink-0 lg:w-48">
+                    <nav className="flex flex-col gap-0.5" aria-label="Settings">
                         {sidebarNavItems.map((item, index) => (
-                            <Button
+                            <Link
                                 key={`${toUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start font-serif', {
-                                    'bg-journal-warm/40 text-journal-burgundy': isCurrentOrParentUrl(item.href),
-                                })}
+                                href={item.href}
+                                className={cn(
+                                    'rounded-lg px-2.5 py-1.5 text-sm',
+                                    isCurrentOrParentUrl(item.href)
+                                        ? 'bg-stone-200/70 font-medium text-stone-900 dark:bg-stone-800 dark:text-stone-50'
+                                        : 'text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/60 dark:hover:text-stone-50',
+                                )}
                             >
-                                <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {item.title}
-                                </Link>
-                            </Button>
+                                {item.title}
+                            </Link>
                         ))}
                     </nav>
                 </aside>
 
-                <Separator className="my-6 lg:hidden" />
-
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
-                        {children}
-                    </section>
+                <div className="min-w-0 flex-1">
+                    <section className="max-w-xl space-y-10">{children}</section>
                 </div>
             </div>
         </div>

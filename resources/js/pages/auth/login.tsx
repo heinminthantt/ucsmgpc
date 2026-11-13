@@ -1,11 +1,11 @@
+import { Icon } from '@iconify/react';
 import { Form, Head } from '@inertiajs/react';
 import { useState } from 'react';
-import { Icon } from '@iconify/react';
 import InputError from '@/components/input-error';
 import PasskeyVerify from '@/components/passkey-verify';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
-import { Button, Checkbox, Input, Label, Spinner } from 'journal-ds';
+import { Button, Checkbox, Input, Label, Spinner } from '@/components/ui';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -33,7 +33,7 @@ export default function Login({ status, canResetPassword }: Props) {
                         {status && (
                             <div
                                 role="status"
-                                className="rounded-sm bg-journal-forest/10 border border-journal-forest/30 px-4 py-3 text-sm font-serif text-journal-forest flex items-center gap-2"
+                                className="rounded-sm bg-emerald-600/10 border border-emerald-600/30 px-4 py-3 text-sm text-emerald-600 flex items-center gap-2"
                             >
                                 <Icon icon="mdi:check-circle-outline" className="shrink-0" />
                                 {status}
@@ -54,7 +54,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     placeholder="you@example.com"
                                     aria-invalid={!!errors.email}
                                     aria-describedby={errors.email ? 'email-error' : undefined}
-                                    className="focus:border-journal-burgundy focus:ring-1 focus:ring-journal-burgundy"
+                                    className="focus:border-primary focus:ring-1 focus:ring-primary"
                                 />
                                 <InputError id="email-error" message={errors.email} />
                             </div>
@@ -65,7 +65,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="text-xs font-serif italic text-journal-sepia hover:text-journal-burgundy transition-colors"
+                                            className="text-xs italic text-muted-foreground hover:text-primary transition-colors"
                                             tabIndex={5}
                                         >
                                             Forgot password?
@@ -92,7 +92,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     onCheckedChange={(c) => setRemember(c === true)}
                                 />
                                 {remember && <input type="hidden" name="remember" value="on" />}
-                                <Label htmlFor="remember-ui" className="text-sm font-normal font-serif cursor-pointer">
+                                <Label htmlFor="remember-ui" className="text-sm font-normal cursor-pointer">
                                     Remember me
                                 </Label>
                             </div>
@@ -110,16 +110,16 @@ export default function Login({ status, canResetPassword }: Props) {
 
                         {/* Ruled separator with centered glyph — editorial touch */}
                         <div className="relative text-center" aria-hidden="true">
-                            <span className="absolute inset-x-0 top-1/2 h-px bg-journal-rule" />
-                            <span className="relative bg-background px-3 text-journal-sepia/60 text-xs">❦</span>
+                            <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                            <span className="relative bg-background px-3 text-muted-foreground/60 text-xs"></span>
                         </div>
 
-                        <p className="text-center font-serif text-sm text-journal-sepia">
+                        <p className="text-center text-sm text-muted-foreground">
                             Don&apos;t have an account?{' '}
                             <TextLink
                                 href={register()}
                                 tabIndex={6}
-                                className="text-journal-burgundy hover:underline underline-offset-4 font-medium"
+                                className="text-primary hover:underline underline-offset-4 font-medium"
                             >
                                 Sign up free
                             </TextLink>

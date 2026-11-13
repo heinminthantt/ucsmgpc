@@ -1,5 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
 import { Icon } from '@iconify/react';
+import { Form, Head } from '@inertiajs/react';
 import {
     index as confirmOptions,
     store as confirmStore,
@@ -7,7 +7,7 @@ import {
 import InputError from '@/components/input-error';
 import PasskeyVerify from '@/components/passkey-verify';
 import PasswordInput from '@/components/password-input';
-import { Button, Label, Spinner } from 'journal-ds';
+import { Button, Label, Spinner } from '@/components/ui';
 import { store } from '@/routes/password/confirm';
 
 export default function ConfirmPassword() {
@@ -17,11 +17,11 @@ export default function ConfirmPassword() {
 
             {/* Secure-area notice — reinforces context before the form */}
             <div
-                className="mb-6 flex items-center gap-3 rounded-sm border border-journal-rule bg-journal-warm/15 px-4 py-3"
+                className="mb-6 flex items-center gap-3 rounded-sm border border-border bg-muted/15 px-4 py-3"
                 role="note"
             >
-                <Icon icon="mdi:shield-lock-outline" className="text-journal-burgundy text-xl shrink-0" aria-hidden="true" />
-                <p className="text-xs font-serif text-journal-sepia leading-relaxed">
+                <Icon icon="mdi:shield-lock-outline" className="text-primary text-xl shrink-0" aria-hidden="true" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
                     You are entering a secure area. Please re-confirm your identity to continue.
                 </p>
             </div>

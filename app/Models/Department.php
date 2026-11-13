@@ -21,4 +21,16 @@ class Department extends Model
     {
         return $this->hasMany(Project::class);
     }
+
+    /** @return HasMany<User, $this> */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /** @return HasMany<AcademicCycle, $this> */
+    public function cycles(): HasMany
+    {
+        return $this->hasMany(AcademicCycle::class);
+    }
 }

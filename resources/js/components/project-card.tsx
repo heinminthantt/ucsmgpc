@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { Icon } from '@iconify/react';
+import { ArrowRight, Building2, Calendar, GraduationCap, Heart, UserRoundCheck } from 'lucide-react';
+import { Badge } from '@/components/ui';
 import type { Project } from '@/types/catalog';
 
 interface Props {
@@ -7,100 +8,94 @@ interface Props {
 }
 
 const statusConfig = {
-    APPROVED: { label: 'Approved', cls: 'success' as const },
-    PENDING: { label: 'Pending', cls: 'warning' as const },
-    REJECTED: { label: 'Rejected', cls: 'destructive' as const },
+    APPROVED: { label: 'Approved', variant: 'secondary' as const },
+    PENDING: { label: 'Pending', variant: 'outline' as const },
+    REJECTED: { label: 'Rejected', variant: 'destructive' as const },
 };
 
 export function ProjectCard({ project }: Props) {
     const status = statusConfig[project.approvalStatus] ?? statusConfig.PENDING;
 
     return (
-        <article className="group flex flex-col h-full border-2 border-journal-ink bg-journal-paper-dark/50 transition-all hover:bg-journal-paper">
-            {/* Cover */}
-            <div className="relative h-36 border-b-2 border-journal-ink bg-journal-warm/20 shrink-0 p-1">
+        <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors hover:border-stone-300">
+            <div className="relative h-36 shrink-0 overflow-hidden bg-stone-100">
                 <img
                     src={project.coverImageUrl || 'https://i.ibb.co/3yYHDr3s/6306486.jpg'}
                     alt={project.title}
-                    className="h-full w-full object-cover group-hover:scale-105 transition-all duration-500"
+                    className="h-full w-full object-cover"
                 />
-                <div className="absolute top-2 right-2 bg-journal-paper border border-journal-ink px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-widest shadow-sm">
+                <Badge variant={status.variant} className="absolute top-2 right-2 bg-white/90">
                     {status.label}
-                </div>
+                </Badge>
             </div>
 
-            <div className="flex flex-col flex-1 p-3">
-                {/* Dept / Course */}
-                <div className="flex flex-wrap gap-1 mb-2">
+            <div className="flex flex-1 flex-col p-4">
+                <div className="mb-2 flex flex-wrap gap-1.5">
                     {project.departmentName && (
-                        <span className="border border-journal-ink px-1 py-0.5 text-[9px] uppercase font-bold tracking-widest flex items-center gap-1">
-                            <Icon icon="mdi:office-building-outline" />
+                        <Badge variant="outline" className="gap-1 font-normal">
+                            <Building2 />
                             {project.departmentName}
-                        </span>
+                        </Badge>
                     )}
                     {project.courseName && (
-                        <span className="border border-journal-ink border-dashed px-1 py-0.5 text-[9px] uppercase font-bold tracking-widest">
+                        <Badge variant="outline" className="font-normal">
                             {project.courseName}
-                        </span>
+                        </Badge>
                     )}
                 </div>
 
-                {/* Title */}
-                <h3 className="font-display font-black text-xl leading-none line-clamp-2 text-journal-ink group-hover:text-journal-burgundy transition-colors uppercase mb-2">
+                <h3 className="mb-1.5 line-clamp-2 text-[15px] leading-snug font-medium text-stone-900">
                     {project.title}
                 </h3>
 
-                {/* Description */}
-                <p className="font-serif text-xs text-journal-ink-light line-clamp-2 flex-1 leading-snug text-justify mb-3">
+                <p className="mb-3 line-clamp-2 flex-1 text-[13px] leading-relaxed text-stone-500">
                     {project.description}
                 </p>
 
-                {/* Meta */}
-                <div className="space-y-1 mb-3 pt-2 border-t border-journal-rule border-dashed">
+                <div className="mb-3 space-y-1 border-t border-stone-100 pt-3">
                     {project.academic_year && (
-                        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-journal-sepia">
-                            <Icon icon="mdi:calendar-outline" className="text-sm shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+                            <Calendar className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                             {project.academic_year}
                         </div>
                     )}
                     {project.student_year && (
-                        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-journal-sepia">
-                            <Icon icon="mdi:school-outline" className="text-sm shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+                            <GraduationCap className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                             {project.student_year}
                         </div>
                     )}
                     {project.supervisorName && (
-                        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-journal-sepia">
-                            <Icon icon="mdi:account-tie-outline" className="text-sm shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+                            <UserRoundCheck className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                             {project.supervisorName}
                         </div>
                     )}
                 </div>
 
-                {/* Tags */}
                 {project.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3 mt-auto">
+                    <div className="mt-auto mb-3 flex flex-wrap gap-1.5">
                         {project.tags.slice(0, 3).map((tag: any) => (
-                            <span key={tag.id ?? tag.name} className="bg-journal-ink text-journal-paper px-1 py-0.5 text-[8px] uppercase tracking-widest font-bold">
+                            <Badge key={tag.id ?? tag.name} variant="secondary" className="font-normal">
                                 {typeof tag === 'object' ? tag.name : tag}
-                            </span>
+                            </Badge>
                         ))}
                         {project.tags.length > 3 && (
-                            <span className="bg-journal-ink text-journal-paper px-1 py-0.5 text-[8px] uppercase tracking-widest font-bold">+{project.tags.length - 3}</span>
+                            <Badge variant="secondary" className="font-normal">+{project.tags.length - 3}</Badge>
                         )}
                     </div>
                 )}
 
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-2 border-t-2 border-journal-ink mt-auto">
-                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-journal-sepia">
-                        <Icon icon="mdi:heart-outline" className="text-sm" />
-                        {project.reactionCount ?? 0} Likes
+                <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-3">
+                    <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+                        <Heart className="h-3.5 w-3.5" />
+                        {project.reactionCount ?? 0} likes
                     </div>
-                    <Link href={`/projects/${project.id}/view`}>
-                        <button className="bg-transparent border-2 border-journal-ink text-journal-ink px-3 py-1 text-[10px] uppercase font-bold tracking-widest hover:bg-journal-ink hover:text-journal-paper transition-colors flex items-center gap-1">
-                            Read Details <Icon icon="mdi:arrow-right" className="text-sm" />
-                        </button>
+                    <Link
+                        href={`/projects/${project.id}/view`}
+                        className="flex items-center gap-1 text-[13px] font-medium text-stone-700 hover:text-stone-900"
+                    >
+                        View details <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                 </div>
             </div>

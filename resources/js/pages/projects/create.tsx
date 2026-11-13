@@ -108,7 +108,7 @@ return;
 
     const [form, setForm] = useState({
         title: '', description: '', objectives: '', benefits: '',
-        body: '', githubLink: '', academic_year: '', student_year: '',
+        body: '', githubLink: '', demoVideoUrl: '', academic_year: '', student_year: '',
         departmentId: '', courseId: '', supervisorId: '',
     });
     const [tags, setTags] = useState<string[]>([]);
@@ -172,6 +172,10 @@ fd.append('body', form.body);
 
         if (form.githubLink) {
 fd.append('github_link', form.githubLink);
+}
+
+        if (form.demoVideoUrl) {
+fd.append('demo_video_url', form.demoVideoUrl);
 }
 
         fd.append('academic_year', form.academic_year);
@@ -258,7 +262,13 @@ fd.append('supervisor_id', form.supervisorId);
                                     <Label htmlFor="githubLink">GitHub link</Label>
                                     <Input id="githubLink" type="url" placeholder="https://github.com/..."
                                         value={form.githubLink} onChange={(e) => set('githubLink', e.target.value)} />
-                                    <p className="text-[13px] text-stone-500">Optional. Link the source repository if available.</p>
+                                    <p className="text-[13px] text-stone-500">Optional. Use the form https://github.com/owner/repository. The link is checked when you save.</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="demoVideoUrl">Demo video link</Label>
+                                    <Input id="demoVideoUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."
+                                        value={form.demoVideoUrl} onChange={(e) => set('demoVideoUrl', e.target.value)} />
+                                    <p className="text-[13px] text-stone-500">Optional. YouTube or Vimeo only. It is embedded on the public project page.</p>
                                 </div>
                             </section>
 

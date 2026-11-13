@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class DepartmentController extends Controller
 {
@@ -30,6 +34,46 @@ class DepartmentController extends Controller
             Log::error('Department show failed: ' . $e->getMessage());
             return response()->json(['message' => 'Could not retrieve department details.'], 500);
         }
+    }
+
+    /**
+     * Public department page (Phase 3, S7): published work and supervisors
+     * only. Never exposes roll numbers, emails, marks or unpublished work.
+     */
+    public function publicPage(Department $department): InertiaResponse
+    {
+        $formatter = app(ProjectController::class);
+
+        $projects = Project::approved()
+            ->where('department_id', $department->id)
+            ->with(['user', 'department', 'course', 'supervisor', 'tags', 'files', 'cycle:id,semester'])
+            ->withCount('reactions')
+            ->orderByDesc('is_featured')
+            ->latest('published_at')
+            ->get();
+
+        $supervisors = User::where('department_id', $department->id)
+            ->whereRaw('UPPER(role) = ?', ['SUPERVISOR'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'bio' => $u->bio,
+                'publishedProjectsCount' => Project::approved()
+                    ->where('supervisor_id', $u->id)->count(),
+            ]);
+
+        return Inertia::render('departments/show', [
+            'department' => ['id' => $department->id, 'name' => $department->name],
+            'counts' => [
+                'publishedProjects' => $projects->count(),
+                'supervisors' => $supervisors->count(),
+            ],
+            'projects' => $projects->map(fn (Project $p) => $formatter->formatProjectPublic($p))->values(),
+            'supervisors' => $supervisors->values(),
+        ]);
     }
 
     public function store(Request $request): JsonResponse

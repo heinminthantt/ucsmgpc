@@ -13,6 +13,7 @@ use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\RubricTemplateController;
 use App\Http\Controllers\SavedProjectController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SupervisorController;
@@ -27,6 +28,10 @@ Route::inertia('/', 'welcome')->name('home');
 // the unguessable token in the link is the credential at this step.
 Route::get('/invite/activate/{token}', [InviteActivationController::class, 'show'])->name('invite.activate');
 Route::post('/invite/activate/{token}', [InviteActivationController::class, 'store'])->name('invite.activate.store');
+
+// Phase 3: public department and supervisor pages (S7).
+Route::get('/departments/{department}', [DepartmentController::class, 'publicPage'])->name('departments.show-page');
+Route::get('/supervisors/{user}', [UserController::class, 'publicSupervisorPage'])->name('supervisors.show-page');
 
 // ─── Public API (no auth required for browsing) ──────────────────────────────
 Route::prefix('api')->group(function () {
@@ -78,11 +83,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::inertia('/department', 'department/index')->name('department.index');
     });
 
+    // Phase 3: examiner queue page (supervisors act as examiners, spec 3.1)
+    Route::middleware('role:supervisor')->group(function () {
+        Route::inertia('/examiner', 'examiner/index')->name('examiner.index');
+    });
+
+    // Phase 3: audit log page (dept admins + admins; endpoint enforces scope)
+    Route::middleware('role:department_admin')->group(function () {
+        Route::inertia('/audit-log', 'audit/index')->name('audit.index');
+    });
+
     // ─── Auth-protected API ───────────────────────────────────────────────────
     Route::prefix('api')->group(function () {
 
         // Current user
         Route::get('/users/me', [UserController::class, 'me'])->name('api.users.me');
+        Route::patch('/me/locale', [UserController::class, 'updateLocale'])->name('api.me.locale');
         Route::get('/users/{user}', [UserController::class, 'show']);
         Route::put('/users/{user}', [UserController::class, 'update']);
         Route::post('/users/{user}/change-password', [UserController::class, 'changePassword']);
@@ -196,6 +212,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/cycles/{cycle}/export', [AcademicCycleController::class, 'export']);
         Route::get('/department/board', [AcademicCycleController::class, 'board']);
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
+
+        // ── Phase 3: featured toggle, analytics, rubric templates ──
+        Route::post('/projects/{project}/feature', [ProjectController::class, 'feature']);
+        Route::get('/department/analytics', [AcademicCycleController::class, 'analytics']);
+        Route::get('/rubric-templates', [RubricTemplateController::class, 'index']);
+        Route::post('/rubric-templates', [RubricTemplateController::class, 'store']);
+        Route::put('/rubric-templates/{template}', [RubricTemplateController::class, 'update']);
 
         // Supervisor
         Route::middleware('role:supervisor')->prefix('supervisor')->group(function () {

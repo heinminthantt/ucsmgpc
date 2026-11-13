@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         'password',
         'avatar_url',
         'bio',
+        'locale',
         'role',
         'is_active',
         'roll_number',

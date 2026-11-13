@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\ProjectNotification;
+use App\Rules\DemoVideoUrlRule;
+use App\Rules\GitHubLink;
+use App\Services\AuditLogger;
+use App\Services\DemoVideoUrl;
+use App\Services\GitHubLinkChecker;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +53,22 @@ class ProjectController extends Controller
             $query->where('student_year', $request->studentYear);
         }
 
+        // Phase 3 (S7): semester filter. A project matches when its cycle
+        // runs in that semester, or (legacy projects without a cycle) when
+        // its student_year label is that semester.
+        if ($request->filled('semester')) {
+            $semester = $request->semester;
+            $query->where(function ($q) use ($semester) {
+                $q->whereHas('cycle', fn ($c) => $c->where('semester', $semester))
+                    ->orWhere('student_year', $semester);
+            });
+        }
+
+        // Phase 3: featured-only listing for the catalog Featured section.
+        if ($request->filled('featured')) {
+            $query->where('is_featured', true);
+        }
+
         if ($request->filled('tags')) {
             $tagName = $request->tags;
             $query->whereHas('tags', fn($q) => $q->where('name', 'like', "%$tagName%"));
@@ -63,10 +84,10 @@ class ProjectController extends Controller
             $query->where('members_json', 'like', "%$mem%");
         }
 
-        // Sort
+        // Sort. Featured projects always come first (Phase 3, S7).
         $sortBy = in_array($request->sortBy, ['created_at', 'title', 'updated_at']) ? $request->sortBy : 'created_at';
         $sortDir = $request->sortDirection === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sortBy, $sortDir);
+        $query->orderByDesc('is_featured')->orderBy($sortBy, $sortDir);
 
         $size = min((int) ($request->size ?? 9), 50);
         $page = max((int) ($request->page ?? 0), 0) + 1;
@@ -121,7 +142,8 @@ class ProjectController extends Controller
             'objectives' => 'required|string',
             'benefits' => 'nullable|string',
             'body' => 'nullable|string',
-            'github_link' => 'nullable|url',
+            'github_link' => ['nullable', 'url', new GitHubLink],
+            'demo_video_url' => ['nullable', 'string', 'max:500', new DemoVideoUrlRule],
             'academic_year' => 'required|string',
             'student_year' => 'required|string',
             'department_id' => 'required|exists:departments,id',
@@ -134,6 +156,11 @@ class ProjectController extends Controller
             'tags.*' => 'string|max:50',
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
         ]);
+
+        // Phase 3: GitHub reachability. A confirmed 404 blocks the save;
+        // a network failure does not (offline-safe). See GitHubLinkChecker.
+        $validated['github_verified_at'] = app(GitHubLinkChecker::class)
+            ->verifiedAtFor($validated['github_link'] ?? null, null, null);
 
         $project = Project::create([
             ...$validated,
@@ -201,7 +228,8 @@ class ProjectController extends Controller
             'objectives' => 'required|string',
             'benefits' => 'nullable|string',
             'body' => 'nullable|string',
-            'github_link' => 'nullable|url',
+            'github_link' => ['nullable', 'url', new GitHubLink],
+            'demo_video_url' => ['nullable', 'string', 'max:500', new DemoVideoUrlRule],
             'academic_year' => 'required|string',
             'student_year' => 'required|string',
             'department_id' => 'required|exists:departments,id',
@@ -212,6 +240,11 @@ class ProjectController extends Controller
             'tags.*' => 'string|max:50',
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
         ]);
+
+        if (array_key_exists('github_link', $validated)) {
+            $validated['github_verified_at'] = app(GitHubLinkChecker::class)
+                ->verifiedAtFor($validated['github_link'], $project->github_link, $project->github_verified_at);
+        }
 
         $project->update($validated);
 
@@ -273,6 +306,36 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * POST /api/projects/{project}/feature { is_featured } (Phase 3, spec 2.3).
+     * Dept admin of the department or system admin only, and only published
+     * projects can be featured. Audit logged.
+     */
+    public function feature(Request $request, Project $project, AuditLogger $audit): JsonResponse
+    {
+        $actor = Auth::user();
+        $allowed = $actor->isAdmin()
+            || ($actor->isDepartmentAdmin() && (int) $actor->department_id === (int) $project->department_id);
+        if (! $allowed) {
+            abort(403, 'Only a department admin of this department (or an admin) can feature a project.');
+        }
+
+        $validated = $request->validate(['is_featured' => 'required|boolean']);
+
+        if ($validated['is_featured'] && ! $project->isPublished()) {
+            return response()->json(['message' => 'Only a published project can be featured.'], 422);
+        }
+
+        $previous = (bool) $project->is_featured;
+        $project->update(['is_featured' => $validated['is_featured']]);
+
+        $audit->log($actor, $validated['is_featured'] ? 'project.featured' : 'project.unfeatured', $project, [
+            'from' => $previous, 'to' => $validated['is_featured'],
+        ], $request);
+
+        return response()->json(['id' => $project->id, 'isFeatured' => (bool) $project->is_featured]);
+    }
+
     public function formatProjectPublic(Project $project): array
     {
         return $this->formatProject($project);
@@ -280,7 +343,7 @@ class ProjectController extends Controller
 
     private function formatProject(Project $project): array
     {
-        $project->loadMissing(['tags', 'files', 'department', 'course', 'supervisor']);
+        $project->loadMissing(['tags', 'files', 'department', 'course', 'supervisor', 'cycle:id,semester']);
         $coverImageUrl = $project->cover_image_url;
         if (!$coverImageUrl && !empty($project->body)) {
             preg_match('/<img[^>]+src=[\'"]([^\'"]+)[\'"][^>]*>/i', $project->body, $matches);
@@ -298,6 +361,11 @@ class ProjectController extends Controller
             'excerpt' => $project->excerpt,
             'contentFormat' => $project->content_format,
             'githubLink' => $project->github_link,
+            'githubVerifiedAt' => $project->github_verified_at?->toISOString(),
+            'demoVideoUrl' => $project->demo_video_url,
+            'demoVideoEmbedUrl' => DemoVideoUrl::embedUrl($project->demo_video_url),
+            'isFeatured' => (bool) $project->is_featured,
+            'semester' => $project->cycle?->semester,
             'coverImageUrl' => $coverImageUrl,
             'academic_year' => $project->academic_year,
             'student_year' => $project->student_year,

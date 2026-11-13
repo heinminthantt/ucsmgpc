@@ -2,27 +2,45 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Department;
-use App\Models\Course;
-use App\Models\Project;
-use App\Models\Tag;
-use App\Models\Member;
 use App\Models\Comment;
-use App\Models\Reaction;
-use App\Models\SavedProject;
+use App\Models\Course;
+use App\Models\Department;
+use App\Models\Member;
+use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Models\Reaction;
+use App\Models\RubricTemplate;
+use App\Models\SavedProject;
+use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     *
+     * Phase 3 / spec NF16: the fictional users and sample projects in this
+     * seeder are DEMO data. They are only created in local/testing, or when
+     * explicitly requested with `db:seed -- --demo` (or SEED_DEMO=true).
+     * A production seed creates only the reference data (departments,
+     * courses, tags) and the default rubric template, never demo projects.
      */
     public function run(): void
     {
+        $seedDemo = app()->environment(['local', 'testing'])
+            || in_array('--demo', $_SERVER['argv'] ?? [], true)
+            || filter_var(env('SEED_DEMO', false), FILTER_VALIDATE_BOOLEAN);
+
+        RubricTemplate::defaultTemplate();
+
+        if (! $seedDemo) {
+            $this->seedReferenceData();
+
+            return;
+        }
+
         // 1. Seed Users (Admin, Supervisors, Students)
         $admin = User::create([
             'name' => 'System Administrator',
@@ -116,7 +134,7 @@ class DatabaseSeeder extends Seeder
         $courses = [
             'CS' => [
                 'web' => Course::create(['department_id' => $depts['CS']->id, 'name' => 'Web Development', 'code' => 'CS-321']),
-                'ai'  => Course::create(['department_id' => $depts['CS']->id, 'name' => 'Artificial Intelligence', 'code' => 'CS-322']),
+                'ai' => Course::create(['department_id' => $depts['CS']->id, 'name' => 'Artificial Intelligence', 'code' => 'CS-322']),
             ],
             'CT' => [
                 'embedded' => Course::create(['department_id' => $depts['CT']->id, 'name' => 'Embedded Systems', 'code' => 'CT-421']),
@@ -238,7 +256,7 @@ class DatabaseSeeder extends Seeder
                 'supervisor_index' => 0, // Charles Xavier
                 'status' => 'pending',
                 'is_featured' => false,
-            ]
+            ],
         ];
 
         foreach ($projectTemplates as $pTemp) {
@@ -266,8 +284,8 @@ class DatabaseSeeder extends Seeder
                 'approved_at' => $pTemp['status'] === 'approved' ? now() : null,
                 'approved_by' => $pTemp['status'] === 'approved' ? $supervisor->id : null,
                 'members_json' => json_encode([
-                    ['name' => $submittedBy->name, 'rollNumber' => 'UCS-0' . rand(1, 9)],
-                    ['name' => $students[rand(0, 5)]->name, 'rollNumber' => 'UCS-0' . rand(1, 9)]
+                    ['name' => $submittedBy->name, 'rollNumber' => 'UCS-0'.rand(1, 9)],
+                    ['name' => $students[rand(0, 5)]->name, 'rollNumber' => 'UCS-0'.rand(1, 9)],
                 ]),
             ]);
 
@@ -278,11 +296,11 @@ class DatabaseSeeder extends Seeder
             // 6. Seed Project Members (Pivot)
             $mem1 = Member::create([
                 'name' => $submittedBy->name,
-                'roll_number' => 'UCS-0' . rand(1, 9),
+                'roll_number' => 'UCS-0'.rand(1, 9),
             ]);
             $mem2 = Member::create([
                 'name' => $students[rand(0, 5)]->name,
-                'roll_number' => 'UCS-0' . rand(1, 9),
+                'roll_number' => 'UCS-0'.rand(1, 9),
             ]);
             $project->members()->attach([$mem1->id, $mem2->id]);
 
@@ -331,6 +349,18 @@ class DatabaseSeeder extends Seeder
                     ]);
                 }
             }
+        }
+    }
+
+    /** Reference data that is safe in every environment (no demo content). */
+    private function seedReferenceData(): void
+    {
+        foreach (['Computer Science', 'Computer Technology', 'Information Science', 'Software Engineering'] as $name) {
+            Department::firstOrCreate(['name' => $name]);
+        }
+
+        foreach (['Laravel', 'React', 'TypeScript', 'Python', 'TailwindCSS', 'Next.js', 'PyTorch', 'Docker', 'PostgreSQL', 'Node.js'] as $name) {
+            Tag::firstOrCreate(['name' => $name]);
         }
     }
 }

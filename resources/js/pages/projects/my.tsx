@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMe, useSupervisors, useUserProjects } from '@/hooks/useCatalog';
+import { useT } from '@/i18n';
 import api from '@/lib/api';
 import type { Project } from '@/types/catalog';
 
@@ -44,6 +45,7 @@ type EvaluationView = {
 
 /** Phase 2 logbook: append-only progress entries written by the team. */
 function LogbookSection({ projectId }: { projectId: number }) {
+    const t = useT();
     const queryClient = useQueryClient();
     const [body, setBody] = useState('');
     const [link, setLink] = useState('');
@@ -76,8 +78,8 @@ function LogbookSection({ projectId }: { projectId: number }) {
 
     return (
         <div className="space-y-3">
-            <h2 className="text-base font-medium">Logbook</h2>
-            {(entries ?? []).length === 0 && <p className="text-sm text-muted-foreground">No entries yet. Add one after each work session.</p>}
+            <h2 className="text-base font-medium">{t('my.logbook')}</h2>
+            {(entries ?? []).length === 0 && <p className="text-sm text-muted-foreground">{t('my.logbook_empty')}</p>}
             {(entries ?? []).map((e) => (
                 <div key={e.id} className="rounded-xl border border-border bg-card p-4 text-sm">
                     <p className="whitespace-pre-wrap">{e.body}</p>
@@ -97,15 +99,15 @@ function LogbookSection({ projectId }: { projectId: number }) {
                 <textarea
                     rows={3}
                     className={textareaClass}
-                    placeholder="What did the team do since the last entry?"
+                    placeholder={t('my.logbook_placeholder')}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                 />
-                <Input placeholder="Optional link (commit, doc, demo)" value={link} onChange={(e) => setLink(e.target.value)} />
+                <Input placeholder={t('my.logbook_link')} value={link} onChange={(e) => setLink(e.target.value)} />
                 <Button size="sm" onClick={addEntry} disabled={posting || !body.trim()}>
                     {posting ? 'Adding...' : 'Add entry'}
                 </Button>
-                <p className="text-xs text-muted-foreground">Entries cannot be edited or deleted.</p>
+                <p className="text-xs text-muted-foreground">{t('my.logbook_note')}</p>
             </div>
         </div>
     );
@@ -142,6 +144,7 @@ const textareaClass =
     'w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring';
 
 export default function MyProject() {
+    const t = useT();
     const queryClient = useQueryClient();
     const { data: me } = useMe();
     const { data: myProjects } = useUserProjects(me?.id);
@@ -157,6 +160,7 @@ export default function MyProject() {
         objectives: project?.objectives ?? '',
         benefits: project?.benefits ?? '',
         githubLink: project?.githubLink ?? '',
+        demoVideoUrl: project?.demoVideoUrl ?? '',
         supervisorId: project?.supervisorId ? String(project.supervisorId) : '',
     });
     const [reportFile, setReportFile] = useState<File | null>(null);
@@ -173,6 +177,7 @@ export default function MyProject() {
             objectives: project.objectives ?? '',
             benefits: project.benefits ?? '',
             githubLink: project.githubLink ?? '',
+            demoVideoUrl: project.demoVideoUrl ?? '',
             supervisorId: project.supervisorId ? String(project.supervisorId) : '',
         });
     }
@@ -218,6 +223,7 @@ return `${data.message ?? fallback} Missing: ${data.missing.join(', ')}`;
         objectives: form.objectives,
         benefits: form.benefits || null,
         github_link: form.githubLink || null,
+        demo_video_url: form.demoVideoUrl || null,
         supervisor_id: form.supervisorId ? parseInt(form.supervisorId) : null,
     });
 
@@ -303,8 +309,8 @@ return;
             <Head title="My project" />
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-2xl font-semibold">My project</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Work on your proposal and final submission, and see feedback from your supervisor.</p>
+                    <h1 className="text-2xl font-semibold">{t('nav.my_project')}</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">{t('my.subtitle')}</p>
                 </div>
 
                 {projects.length === 0 && (
@@ -345,31 +351,35 @@ return;
 
                         <div className="space-y-4 rounded-xl border border-border bg-card p-5">
                             <div className="space-y-1.5">
-                                <Label htmlFor="mp-title">Title</Label>
+                                <Label htmlFor="mp-title">{t('my.title_label')}</Label>
                                 <Input id="mp-title" value={form.title} onChange={(e) => set('title', e.target.value)} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label htmlFor="mp-description">Description / abstract</Label>
+                                <Label htmlFor="mp-description">{t('my.description_label')}</Label>
                                 <textarea id="mp-description" rows={3} className={textareaClass} value={form.description} onChange={(e) => set('description', e.target.value)} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label htmlFor="mp-objectives">Objectives</Label>
+                                <Label htmlFor="mp-objectives">{t('my.objectives_label')}</Label>
                                 <textarea id="mp-objectives" rows={3} className={textareaClass} value={form.objectives} onChange={(e) => set('objectives', e.target.value)} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label htmlFor="mp-benefits">Benefits</Label>
+                                <Label htmlFor="mp-benefits">{t('my.benefits_label')}</Label>
                                 <textarea id="mp-benefits" rows={2} className={textareaClass} value={form.benefits} onChange={(e) => set('benefits', e.target.value)} />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="mp-github">GitHub link</Label>
+                                    <Label htmlFor="mp-github">{t('my.github_label')}</Label>
                                     <Input id="mp-github" placeholder="https://github.com/..." value={form.githubLink} onChange={(e) => set('githubLink', e.target.value)} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label>Supervisor</Label>
+                                    <Label htmlFor="mp-demo">{t('my.demo_label')}</Label>
+                                    <Input id="mp-demo" placeholder="https://www.youtube.com/watch?v=..." value={form.demoVideoUrl} onChange={(e) => set('demoVideoUrl', e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>{t('my.supervisor_label')}</Label>
                                     <Select value={form.supervisorId} onValueChange={(v) => set('supervisorId', v)}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select a supervisor" />
+                                            <SelectValue placeholder={t('my.select_supervisor')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {(supervisors ?? []).map((s: any) => (
@@ -382,18 +392,18 @@ return;
                                 </div>
                             </div>
                             <div className="space-y-1.5">
-                                <Label htmlFor="mp-report">Final report (PDF, for final submission)</Label>
+                                <Label htmlFor="mp-report">{t('my.report_label')}</Label>
                                 <Input id="mp-report" type="file" accept=".pdf" onChange={(e) => setReportFile(e.target.files?.[0] ?? null)} />
                             </div>
                             <div className="flex flex-wrap gap-2 pt-1">
                                 <Button variant="outline" onClick={saveDraft} disabled={busy !== null}>
-                                    {busy === 'draft' ? 'Saving...' : 'Save draft'}
+                                    {busy === 'draft' ? 'Saving...' : t('my.save_draft')}
                                 </Button>
                                 <Button onClick={() => submitStage('proposal')} disabled={busy !== null}>
-                                    {busy === 'proposal' ? 'Submitting...' : 'Submit proposal'}
+                                    {busy === 'proposal' ? 'Submitting...' : t('my.submit_proposal')}
                                 </Button>
                                 <Button variant="secondary" onClick={() => submitStage('final')} disabled={busy !== null}>
-                                    {busy === 'final' ? 'Submitting...' : 'Submit final'}
+                                    {busy === 'final' ? 'Submitting...' : t('my.submit_final')}
                                 </Button>
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -403,14 +413,14 @@ return;
 
                         {project.status === 'in_progress' && (
                             <div className="space-y-3 rounded-xl border border-border bg-card p-5">
-                                <h2 className="text-base font-medium">Mid-review</h2>
+                                <h2 className="text-base font-medium">{t('my.mid_review')}</h2>
                                 <p className="text-sm text-muted-foreground">
                                     Send a short progress summary to your supervisor for the mid-review checkpoint.
                                 </p>
                                 <textarea
                                     rows={3}
                                     className={textareaClass}
-                                    placeholder="Progress summary: what is done, what is next, any blockers"
+                                    placeholder={t('my.mid_placeholder')}
                                     value={midSummary}
                                     onChange={(e) => setMidSummary(e.target.value)}
                                 />
@@ -422,7 +432,7 @@ return;
 
                         {evaluation && (evaluation.resultConfirmed || evaluation.defense || evaluation.evaluationConflict) && (
                             <div className="space-y-2 rounded-xl border border-border bg-card p-5">
-                                <h2 className="text-base font-medium">Evaluation</h2>
+                                <h2 className="text-base font-medium">{t('my.evaluation')}</h2>
                                 {evaluation.evaluationConflict && (
                                     <p className="text-sm text-muted-foreground">
                                         Your supervisor and examiner disagreed on the result. A department admin is resolving it.
@@ -454,8 +464,8 @@ return;
                         )}
 
                         <div className="space-y-3">
-                            <h2 className="text-base font-medium">Submission history</h2>
-                            {(submissions ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nothing submitted yet.</p>}
+                            <h2 className="text-base font-medium">{t('my.history')}</h2>
+                            {(submissions ?? []).length === 0 && <p className="text-sm text-muted-foreground">{t('my.history_empty')}</p>}
                             {(submissions ?? []).map((s) => (
                                 <div key={s.id} className="rounded-xl border border-border bg-card p-4">
                                     <div className="flex flex-wrap items-center gap-2 text-sm">

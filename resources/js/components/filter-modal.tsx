@@ -179,6 +179,27 @@ return [];
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        <div className="space-y-1.5">
+                            <label className={labelClass}>
+                                <Calendar className="h-4 w-4 text-stone-400" />
+                                Cycle semester
+                            </label>
+                            <Select
+                                value={filters.semester || 'all'}
+                                onValueChange={(v) => onFilterChange('semester', v === 'all' ? '' : v)}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="All" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All semesters</SelectItem>
+                                    {semesters.map((s) => (
+                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <Separator />

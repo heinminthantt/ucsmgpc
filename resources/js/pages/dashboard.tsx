@@ -3,8 +3,10 @@ import { ArrowRight, Bell, CheckCircle2, ClipboardCheck, Clock, Compass, Folder,
 import { ProjectCard } from '@/components/project-card';
 import { Button, Card, CardContent } from '@/components/ui';
 import { useMe, useUserProjects, useNotifications } from '@/hooks/useCatalog';
+import { useT } from '@/i18n';
 
 export default function Dashboard() {
+    const t = useT();
     const { data: me } = useMe();
     const { data: myProjects } = useUserProjects(me?.id);
     const { data: notifications } = useNotifications();
@@ -13,10 +15,10 @@ export default function Dashboard() {
     const recentProjects = myProjects?.slice(0, 3) ?? [];
 
     const stats = [
-        { label: 'My projects', value: myProjects?.length ?? 0, icon: FolderOpen, href: '/profile' },
-        { label: 'Approved', value: myProjects?.filter((p) => p.approvalStatus === 'APPROVED').length ?? 0, icon: CheckCircle2, href: '/profile' },
-        { label: 'Pending review', value: myProjects?.filter((p) => p.approvalStatus === 'PENDING').length ?? 0, icon: Clock, href: '/profile' },
-        { label: 'Notifications', value: unread, icon: Bell, href: '/notifications' },
+        { label: t('dash.my_projects'), value: myProjects?.length ?? 0, icon: FolderOpen, href: '/profile' },
+        { label: t('dash.approved'), value: myProjects?.filter((p) => p.approvalStatus === 'APPROVED').length ?? 0, icon: CheckCircle2, href: '/profile' },
+        { label: t('dash.pending_review'), value: myProjects?.filter((p) => p.approvalStatus === 'PENDING').length ?? 0, icon: Clock, href: '/profile' },
+        { label: t('dash.notifications'), value: unread, icon: Bell, href: '/notifications' },
     ];
 
     return (
@@ -27,21 +29,21 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl font-semibold text-stone-900">
-                                Welcome back{me?.name ? `, ${me.name.split(' ')[0]}` : ''}
+                                {t('dash.welcome_back')}{me?.name ? `, ${me.name.split(' ')[0]}` : ''}
                             </h1>
                             <p className="mt-1 text-sm text-stone-500">
-                                Here&apos;s what&apos;s happening with your projects.
+                                {t('dash.happening')}
                             </p>
                         </div>
                         <div className="flex gap-2">
                             <Button asChild size="sm">
                                 <Link href="/projects/create">
-                                    <Plus /> New project
+                                    <Plus /> {t('nav.new_project')}
                                 </Link>
                             </Button>
                             <Button asChild size="sm" variant="outline">
                                 <Link href="/projects">
-                                    <Compass /> Browse
+                                    <Compass /> {t('dash.browse')}
                                 </Link>
                             </Button>
                         </div>
@@ -69,18 +71,18 @@ export default function Dashboard() {
                         <div className="rounded-xl border border-stone-200 bg-white p-5">
                             <div className="mb-4 flex items-center gap-2">
                                 <ClipboardCheck className="h-5 w-5 text-stone-400" />
-                                <h2 className="text-sm font-medium text-stone-900">Quick actions</h2>
+                                <h2 className="text-sm font-medium text-stone-900">{t('dash.quick_actions')}</h2>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <Button asChild variant="outline" size="sm">
                                     <Link href="/supervisor-dashboard">
-                                        <ClipboardCheck /> Supervisor dashboard
+                                        <ClipboardCheck /> {t('dash.supervisor_dashboard')}
                                     </Link>
                                 </Button>
                                 {me.role === 'ADMIN' && (
                                     <Button asChild variant="outline" size="sm">
                                         <Link href="/admin-dashboard">
-                                            <Shield /> Admin dashboard
+                                            <Shield /> {t('dash.admin_dashboard')}
                                         </Link>
                                     </Button>
                                 )}
@@ -90,19 +92,19 @@ export default function Dashboard() {
 
                     <div>
                         <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-base font-medium text-stone-900">My recent projects</h2>
+                            <h2 className="text-base font-medium text-stone-900">{t('dash.recent')}</h2>
                             <Link href="/profile" className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900">
-                                View all <ArrowRight className="h-4 w-4" />
+                                {t('dash.view_all')} <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
                         {recentProjects.length === 0 ? (
                             <div className="rounded-xl border border-stone-200 bg-white px-6 py-12 text-center">
                                 <Folder className="mx-auto h-8 w-8 text-stone-300" />
-                                <p className="mt-3 text-sm font-medium text-stone-900">No projects yet</p>
-                                <p className="mt-1 text-[13px] text-stone-500">Create your first project to get started.</p>
+                                <p className="mt-3 text-sm font-medium text-stone-900">{t('dash.no_projects_title')}</p>
+                                <p className="mt-1 text-[13px] text-stone-500">{t('dash.no_projects_desc')}</p>
                                 <Button asChild size="sm" className="mt-4">
                                     <Link href="/projects/create">
-                                        <Plus /> Create your first project
+                                        <Plus /> {t('dash.create_first')}
                                     </Link>
                                 </Button>
                             </div>

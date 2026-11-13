@@ -21,7 +21,27 @@ type Cycle = {
     supervisor_capacity: number;
     proposal_deadline: string;
     final_deadline: string;
+    rubric_template_id?: number | null;
     status: string;
+};
+
+type RubricTemplate = {
+    id: number;
+    name: string;
+    passThreshold: number;
+    criteria: { key: string; label: string; weight: number; max: number }[];
+};
+
+type Analytics = {
+    cycleLabel?: string | null;
+    totalProjects: number;
+    byStatus: Record<string, number>;
+    passRate?: number | null;
+    evaluatedProjects: number;
+    averageRubricTotal?: number | null;
+    averageDaysProposalToPublished?: number | null;
+    supervisorLoad: { supervisorId: number; supervisorName?: string | null; projects: number }[];
+    topTags: { tag: string; projects: number }[];
 };
 
 type BoardProject = {
@@ -109,6 +129,244 @@ function BoardSection({ cycles }: { cycles: Cycle[] }) {
     );
 }
 
+
+/** Rubric template picker for the cycle form. */
+function RubricSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const { data: templates } = useQuery<RubricTemplate[]>({
+        queryKey: ['rubric-templates'],
+        queryFn: () => api.get('/rubric-templates').then((r) => r.data),
+    });
+
+    return (
+        <Select value={value || 'default'} onValueChange={(v) => onChange(v === 'default' ? '' : v)}>
+            <SelectTrigger>
+                <SelectValue placeholder="Default rubric" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="default">Default rubric</SelectItem>
+                {(templates ?? []).map((tpl) => (
+                    <SelectItem key={tpl.id} value={String(tpl.id)}>
+                        {tpl.name}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+}
+
+/** Phase 3 analytics: per-cycle outcome numbers for the department office. */
+function AnalyticsSection({ cycles }: { cycles: Cycle[] }) {
+    const [cycleId, setCycleId] = useState<string>('');
+
+    const { data: analytics } = useQuery<Analytics>({
+        queryKey: ['department-analytics', cycleId],
+        queryFn: () =>
+            api
+                .get('/department/analytics', { params: cycleId ? { cycle_id: parseInt(cycleId) } : {} })
+                .then((r) => r.data),
+    });
+
+    const maxLoad = Math.max(1, ...(analytics?.supervisorLoad ?? []).map((l) => l.projects));
+
+    return (
+        <section className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-base font-medium">Analytics</h2>
+                <Select value={cycleId || 'latest'} onValueChange={(v) => setCycleId(v === 'latest' ? '' : v)}>
+                    <SelectTrigger className="w-56">
+                        <SelectValue placeholder="Latest cycle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="latest">Latest cycle</SelectItem>
+                        {cycles.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)}>
+                                {c.academic_year} · {c.semester}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                {analytics?.cycleLabel && <span className="text-sm text-muted-foreground">{analytics.cycleLabel}</span>}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                    { label: 'Projects', value: analytics?.totalProjects ?? 0 },
+                    { label: 'Pass rate', value: analytics?.passRate != null ? `${analytics.passRate}%` : 'n/a' },
+                    { label: 'Average rubric total', value: analytics?.averageRubricTotal ?? 'n/a' },
+                    { label: 'Avg days, proposal to published', value: analytics?.averageDaysProposalToPublished ?? 'n/a' },
+                ].map((stat) => (
+                    <div key={stat.label} className="rounded-xl border border-border bg-card p-4">
+                        <div className="text-xl font-semibold">{stat.value}</div>
+                        <div className="text-[13px] text-muted-foreground">{stat.label}</div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-2">
+                <div className="rounded-xl border border-border bg-card p-4">
+                    <h3 className="mb-3 text-sm font-medium">Projects by status</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(analytics?.byStatus ?? {}).map(([status, n]) => (
+                            <Badge key={status} variant="secondary">
+                                {status.replace(/_/g, ' ')}: {n}
+                            </Badge>
+                        ))}
+                        {(analytics?.totalProjects ?? 0) === 0 && <p className="text-sm text-muted-foreground">No projects in this cycle yet.</p>}
+                    </div>
+                    {(analytics?.topTags ?? []).length > 0 && (
+                        <>
+                            <h3 className="mt-4 mb-2 text-sm font-medium">Top tags (published)</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {analytics!.topTags.map((t) => (
+                                    <Badge key={t.tag} variant="outline">
+                                        {t.tag}: {t.projects}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-4">
+                    <h3 className="mb-3 text-sm font-medium">Supervisor load</h3>
+                    <div className="space-y-2">
+                        {(analytics?.supervisorLoad ?? []).map((load) => (
+                            <div key={load.supervisorId} className="flex items-center gap-3 text-sm">
+                                <span className="w-40 truncate">{load.supervisorName ?? `Supervisor ${load.supervisorId}`}</span>
+                                <div className="h-2 flex-1 rounded bg-stone-100">
+                                    <div className="h-2 rounded bg-[#C15F3C]" style={{ width: `${(load.projects / maxLoad) * 100}%` }} />
+                                </div>
+                                <span className="text-muted-foreground">{load.projects}</span>
+                            </div>
+                        ))}
+                        {(analytics?.supervisorLoad ?? []).length === 0 && <p className="text-sm text-muted-foreground">No supervised projects yet.</p>}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+/** Phase 3 rubric template management: list, create and edit templates. */
+function RubricSection() {
+    const queryClient = useQueryClient();
+    const { data: templates } = useQuery<RubricTemplate[]>({
+        queryKey: ['rubric-templates'],
+        queryFn: () => api.get('/rubric-templates').then((r) => r.data),
+    });
+
+    const emptyCriterion = { key: '', label: '', weight: '10', max: '100' };
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [name, setName] = useState('');
+    const [passThreshold, setPassThreshold] = useState('50');
+    const [criteria, setCriteria] = useState<{ key: string; label: string; weight: string; max: string }[]>([{ ...emptyCriterion }]);
+    const [saving, setSaving] = useState(false);
+
+    const startEdit = (tpl: RubricTemplate) => {
+        setEditingId(tpl.id);
+        setName(tpl.name);
+        setPassThreshold(String(tpl.passThreshold));
+        setCriteria(tpl.criteria.map((c) => ({ key: c.key, label: c.label, weight: String(c.weight), max: String(c.max) })));
+    };
+
+    const reset = () => {
+        setEditingId(null);
+        setName('');
+        setPassThreshold('50');
+        setCriteria([{ ...emptyCriterion }]);
+    };
+
+    const save = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        const payload = {
+            name,
+            pass_threshold: parseFloat(passThreshold),
+            criteria: criteria.map((c) => ({ key: c.key, label: c.label, weight: parseFloat(c.weight), max: parseFloat(c.max) })),
+        };
+
+        try {
+            if (editingId) {
+                await api.put(`/rubric-templates/${editingId}`, payload);
+            } else {
+                await api.post('/rubric-templates', payload);
+            }
+
+            toast.success('Rubric template saved');
+            reset();
+            await queryClient.invalidateQueries({ queryKey: ['rubric-templates'] });
+        } catch (err: any) {
+            const errors = err?.response?.data?.errors;
+            toast.error(errors ? Object.values(errors).flat().join(' ') : (err?.response?.data?.message ?? 'Could not save template'));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+            <div>
+                <h2 className="text-base font-medium">Rubric templates</h2>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                    Cycles use one template each. Editing a template that a cycle already uses changes future scoring for that cycle, so prefer a new template for the next cycle.
+                </p>
+            </div>
+
+            <div className="space-y-2">
+                {(templates ?? []).map((tpl) => (
+                    <div key={tpl.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm">
+                        <span className="font-medium">{tpl.name}</span>
+                        <span className="text-muted-foreground">Pass at {tpl.passThreshold}</span>
+                        <span className="text-muted-foreground">{tpl.criteria.map((c) => `${c.label} ${c.weight}%`).join(' · ')}</span>
+                        <Button size="sm" variant="outline" className="ml-auto" onClick={() => startEdit(tpl)}>
+                            Edit
+                        </Button>
+                    </div>
+                ))}
+            </div>
+
+            <form onSubmit={save} className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="rt-name">{editingId ? 'Template name' : 'New template name'}</Label>
+                        <Input id="rt-name" value={name} onChange={(e) => setName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="rt-pass">Pass threshold (0 to 100)</Label>
+                        <Input id="rt-pass" type="number" min={0} max={100} value={passThreshold} onChange={(e) => setPassThreshold(e.target.value)} required />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    {criteria.map((c, i) => (
+                        <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                            <Input placeholder="key, e.g. implementation" value={c.key} onChange={(e) => setCriteria((prev) => prev.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} required />
+                            <Input placeholder="Label" value={c.label} onChange={(e) => setCriteria((prev) => prev.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} required />
+                            <Input placeholder="Weight" type="number" min={0} step="any" value={c.weight} onChange={(e) => setCriteria((prev) => prev.map((x, j) => (j === i ? { ...x, weight: e.target.value } : x)))} required />
+                            <Input placeholder="Max score" type="number" min={0} step="any" value={c.max} onChange={(e) => setCriteria((prev) => prev.map((x, j) => (j === i ? { ...x, max: e.target.value } : x)))} required />
+                            <Button type="button" variant="outline" size="sm" onClick={() => setCriteria((prev) => prev.filter((_, j) => j !== i))} disabled={criteria.length <= 1}>
+                                Remove
+                            </Button>
+                        </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCriteria((prev) => [...prev, { ...emptyCriterion }])}>
+                        Add criterion
+                    </Button>
+                </div>
+                <div className="flex gap-2">
+                    <Button type="submit" disabled={saving}>
+                        {saving ? 'Saving...' : editingId ? 'Save changes' : 'Create template'}
+                    </Button>
+                    {editingId && (
+                        <Button type="button" variant="outline" onClick={reset}>
+                            Cancel editing
+                        </Button>
+                    )}
+                </div>
+            </form>
+        </section>
+    );
+}
+
 type ImportError = { row?: number; line?: number; message?: string; [key: string]: unknown };
 type ImportPreview = {
     type: string;
@@ -144,6 +402,7 @@ export default function Department() {
         mid_deadline: '',
         final_deadline: '',
         report_pdf_visibility: 'university',
+        rubric_template_id: '',
         status: 'open',
     });
     const [creating, setCreating] = useState(false);
@@ -166,6 +425,7 @@ export default function Department() {
                 mid_deadline: form.mid_deadline || null,
                 final_deadline: form.final_deadline,
                 report_pdf_visibility: form.report_pdf_visibility,
+                rubric_template_id: form.rubric_template_id ? parseInt(form.rubric_template_id) : null,
                 status: form.status,
             });
             toast.success('Cycle created');
@@ -291,6 +551,8 @@ setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.error
 
                 <BoardSection cycles={cycles ?? []} />
 
+                <AnalyticsSection cycles={cycles ?? []} />
+
                 <section className="space-y-4 rounded-xl border border-border bg-card p-5">
                     <h2 className="text-base font-medium">Create cycle</h2>
                     <form onSubmit={createCycle} className="grid gap-4 sm:grid-cols-2">
@@ -368,6 +630,10 @@ setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.error
                             <Input id="cy-final" type="datetime-local" value={form.final_deadline} onChange={(e) => set('final_deadline', e.target.value)} required />
                         </div>
                         <div className="space-y-1.5">
+                            <Label>Rubric template</Label>
+                            <RubricSelect value={form.rubric_template_id} onChange={(v) => set('rubric_template_id', v)} />
+                        </div>
+                        <div className="space-y-1.5">
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={(v) => set('status', v)}>
                                 <SelectTrigger>
@@ -439,6 +705,8 @@ setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.error
                         </div>
                     )}
                 </section>
+
+                <RubricSection />
             </div>
         </>
     );

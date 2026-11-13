@@ -94,7 +94,7 @@ function BoardSection({ cycles }: { cycles: Cycle[] }) {
                         ))}
                     </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">{board?.total ?? 0} project(s)</span>
+                <span className="text-sm text-muted-foreground">{board?.total ?? 0} {(board?.total ?? 0) === 1 ? 'project' : 'projects'}</span>
             </div>
 
             {countEntries.length > 0 && (
@@ -233,8 +233,8 @@ function AnalyticsSection({ cycles }: { cycles: Cycle[] }) {
                         {(analytics?.supervisorLoad ?? []).map((load) => (
                             <div key={load.supervisorId} className="flex items-center gap-3 text-sm">
                                 <span className="w-40 truncate">{load.supervisorName ?? `Supervisor ${load.supervisorId}`}</span>
-                                <div className="h-2 flex-1 rounded bg-stone-100">
-                                    <div className="h-2 rounded bg-[#C15F3C]" style={{ width: `${(load.projects / maxLoad) * 100}%` }} />
+                                <div className="h-2 flex-1 rounded bg-muted">
+                                    <div className="h-2 rounded bg-gold" style={{ width: `${(load.projects / maxLoad) * 100}%` }} />
                                 </div>
                                 <span className="text-muted-foreground">{load.projects}</span>
                             </div>
@@ -511,42 +511,44 @@ setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.error
     return (
         <>
             <Head title="Department" />
-            <div className="space-y-8">
+            <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
                 <div>
-                    <h1 className="text-2xl font-semibold">Department</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Academic cycles and cohort import for your department.</p>
+                    <h1 className="text-3xl font-semibold">Department</h1>
+                    <p className="mt-2 text-sm text-muted-foreground">Academic cycles and cohort import for your department.</p>
                 </div>
 
                 <section className="space-y-3">
                     <h2 className="text-base font-medium">Cycles</h2>
                     {(cycles ?? []).length === 0 && <p className="text-sm text-muted-foreground">No cycles yet. Create the first one below.</p>}
-                    <div className="overflow-hidden rounded-xl border border-border bg-card">
-                        {(cycles ?? []).map((c, i) => (
-                            <div key={c.id} className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm ${i > 0 ? 'border-t border-border' : ''}`}>
-                                <span className="font-medium">
-                                    {c.academic_year} · {c.semester}
-                                </span>
-                                <span className="text-muted-foreground">{c.departmentName}</span>
-                                <span className="text-muted-foreground">{c.project_type === 'final_year_project' ? 'Final year project' : 'Course project'}</span>
-                                <span className="text-muted-foreground">
-                                    Teams {c.team_min}–{c.team_max} · Final deadline {new Date(c.final_deadline).toLocaleDateString()}
-                                </span>
-                                <span className="ml-auto flex items-center gap-2">
-                                    <Badge variant="secondary">{c.status}</Badge>
-                                    <a href={`/api/cycles/${c.id}/export?format=csv`}>
-                                        <Button size="sm" variant="outline" type="button">
-                                            Export CSV
-                                        </Button>
-                                    </a>
-                                    {c.status !== 'closed' && c.status !== 'archived' && (
-                                        <Button size="sm" variant="outline" onClick={() => closeCycle(c.id)}>
-                                            Close
-                                        </Button>
-                                    )}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    {(cycles ?? []).length > 0 && (
+                        <div className="overflow-hidden rounded-xl border border-border bg-card">
+                            {(cycles ?? []).map((c, i) => (
+                                <div key={c.id} className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm ${i > 0 ? 'border-t border-border' : ''}`}>
+                                    <span className="font-medium">
+                                        {c.academic_year} · {c.semester}
+                                    </span>
+                                    <span className="text-muted-foreground">{c.departmentName}</span>
+                                    <span className="text-muted-foreground">{c.project_type === 'final_year_project' ? 'Final year project' : 'Course project'}</span>
+                                    <span className="text-muted-foreground">
+                                        Teams {c.team_min}–{c.team_max} · Final deadline {new Date(c.final_deadline).toLocaleDateString()}
+                                    </span>
+                                    <span className="ml-auto flex items-center gap-2">
+                                        <Badge variant="secondary">{c.status}</Badge>
+                                        <a href={`/api/cycles/${c.id}/export?format=csv`}>
+                                            <Button size="sm" variant="outline" type="button">
+                                                Export CSV
+                                            </Button>
+                                        </a>
+                                        {c.status !== 'closed' && c.status !== 'archived' && (
+                                            <Button size="sm" variant="outline" onClick={() => closeCycle(c.id)}>
+                                                Close
+                                            </Button>
+                                        )}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 <BoardSection cycles={cycles ?? []} />

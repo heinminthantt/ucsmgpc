@@ -17,10 +17,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div>
+        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
             <div className="mb-8">
-                <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Manage your profile and account settings</p>
+                <h1 className="text-3xl font-semibold text-foreground">Settings</h1>
+                <p className="mt-2 text-sm text-muted-foreground">Manage your profile and account settings</p>
             </div>
 
             <div className="flex flex-col gap-8 lg:flex-row">
@@ -31,10 +31,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 key={`${toUrl(item.href)}-${index}`}
                                 href={item.href}
                                 className={cn(
-                                    'rounded-lg px-2.5 py-1.5 text-sm',
+                                    'rounded-md px-3 py-2 text-sm transition-colors',
                                     isCurrentOrParentUrl(item.href)
-                                        ? 'bg-stone-200/70 font-medium text-stone-900 dark:bg-stone-800 dark:text-stone-50'
-                                        : 'text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/60 dark:hover:text-stone-50',
+                                        ? 'bg-card font-medium text-foreground'
+                                        : 'text-muted-foreground hover:bg-card hover:text-foreground',
                                 )}
                             >
                                 {item.title}

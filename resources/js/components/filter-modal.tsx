@@ -48,7 +48,7 @@ return [];
         ([k, v]) => !['page', 'size', 'sortBy', 'sortDirection'].includes(k) && v !== '',
     ).length;
 
-    const labelClass = 'flex items-center gap-1.5 text-[13px] font-medium text-stone-700';
+    const labelClass = 'flex items-center gap-1.5 text-[13px] font-medium text-foreground/85';
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -67,7 +67,7 @@ return [];
             <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base font-medium">
-                        <SlidersHorizontal className="h-4 w-4 text-stone-400" />
+                        <SlidersHorizontal className="h-4 w-4 text-muted-foreground/70" />
                         Filter projects
                     </DialogTitle>
                 </DialogHeader>
@@ -75,7 +75,7 @@ return [];
                 <div className="mt-4 space-y-5">
                     <div className="space-y-1.5">
                         <label className={labelClass}>
-                            <Search className="h-4 w-4 text-stone-400" />
+                            <Search className="h-4 w-4 text-muted-foreground/70" />
                             Keyword
                         </label>
                         <Input
@@ -90,7 +90,7 @@ return [];
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <Building2 className="h-4 w-4 text-stone-400" />
+                                <Building2 className="h-4 w-4 text-muted-foreground/70" />
                                 Department
                             </label>
                             <Select
@@ -114,7 +114,7 @@ return [];
 
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <BookOpen className="h-4 w-4 text-stone-400" />
+                                <BookOpen className="h-4 w-4 text-muted-foreground/70" />
                                 Course
                             </label>
                             <Select
@@ -129,7 +129,7 @@ return [];
                                     <SelectItem value="all">All courses</SelectItem>
                                     {filteredCourses.map((c) => (
                                         <SelectItem key={c.id} value={String(c.id)}>
-                                            {c.code ? `${c.code} — ` : ''}{c.name}
+                                            {c.code ? `${c.code} · ` : ''}{c.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -140,7 +140,7 @@ return [];
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <Calendar className="h-4 w-4 text-stone-400" />
+                                <Calendar className="h-4 w-4 text-muted-foreground/70" />
                                 Academic year
                             </label>
                             <Select
@@ -161,7 +161,7 @@ return [];
 
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <GraduationCap className="h-4 w-4 text-stone-400" />
+                                <GraduationCap className="h-4 w-4 text-muted-foreground/70" />
                                 Semester
                             </label>
                             <Select
@@ -182,7 +182,7 @@ return [];
 
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <Calendar className="h-4 w-4 text-stone-400" />
+                                <Calendar className="h-4 w-4 text-muted-foreground/70" />
                                 Cycle semester
                             </label>
                             <Select
@@ -207,7 +207,7 @@ return [];
                     <div className="space-y-3">
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <UserRoundCheck className="h-4 w-4 text-stone-400" />
+                                <UserRoundCheck className="h-4 w-4 text-muted-foreground/70" />
                                 Supervisor
                             </label>
                             <Input placeholder="e.g. Dr. Smith" value={filters.supervisor} onChange={(e) => onFilterChange('supervisor', e.target.value)} />
@@ -215,7 +215,7 @@ return [];
 
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <Users className="h-4 w-4 text-stone-400" />
+                                <Users className="h-4 w-4 text-muted-foreground/70" />
                                 Team member
                             </label>
                             <Input placeholder="e.g. John Doe" value={filters.members} onChange={(e) => onFilterChange('members', e.target.value)} />
@@ -223,7 +223,7 @@ return [];
 
                         <div className="space-y-1.5">
                             <label className={labelClass}>
-                                <Tag className="h-4 w-4 text-stone-400" />
+                                <Tag className="h-4 w-4 text-muted-foreground/70" />
                                 Language / technology
                             </label>
                             <Input placeholder="e.g. React, Python, Laravel" value={filters.tags} onChange={(e) => onFilterChange('tags', e.target.value)} />
@@ -239,7 +239,7 @@ return [];
                                         {String(v)}
                                         <button
                                             onClick={() => onFilterChange(k as keyof Filters, '')}
-                                            className="ml-0.5 hover:text-stone-900"
+                                            className="ml-0.5 hover:text-foreground"
                                             aria-label={`Remove filter ${k}`}
                                         >
                                             <X className="h-3 w-3" />

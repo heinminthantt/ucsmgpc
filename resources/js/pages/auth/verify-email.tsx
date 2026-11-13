@@ -10,7 +10,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
         <>
             <Head title="Email verification" />
 
-            {/* Illustrative envelope mark — anchors the empty state */}
+            {/* Illustrative envelope mark: anchors the empty state */}
             <div className="mb-6 flex justify-center" aria-hidden="true">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
                     <Icon icon="mdi:email-seal-outline" className="text-3xl text-primary" />

@@ -26,11 +26,11 @@ export default function ExaminerIndex() {
     return (
         <>
             <Head title="Examiner queue" />
-            <div className="space-y-6">
+            <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
                 <div>
-                    <h1 className="text-2xl font-semibold">{t('examiner.title')}</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {(queue ?? []).length} project(s) waiting for your evaluation.
+                    <h1 className="text-3xl font-semibold">{t('examiner.title')}</h1>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        {(queue ?? []).length} {(queue ?? []).length === 1 ? 'project' : 'projects'} waiting for your evaluation.
                     </p>
                 </div>
 

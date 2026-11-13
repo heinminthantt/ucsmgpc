@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import api from '@/lib/api';
 import en from './en.json';
@@ -74,6 +74,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     const [serverLocale] = useState<Locale | null>(() => initialServerLocale());
     const [stored] = useState<Locale | null>(() => storedLocale());
     const locale: Locale = override ?? serverLocale ?? stored ?? 'en';
+
+    // Drives :lang(my) typography (MiSans Myanmar) and assistive tech.
+    useEffect(() => {
+        document.documentElement.lang = locale;
+    }, [locale]);
 
     const setLocale = useCallback((next: Locale) => {
         setOverride(next);

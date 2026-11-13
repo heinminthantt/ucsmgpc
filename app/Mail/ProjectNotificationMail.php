@@ -30,7 +30,7 @@ class ProjectNotificationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'UCSM Project Catalog: '.$this->projectTitle,
+            subject: 'UCSMGY Project Catalog: '.$this->projectTitle,
         );
     }
 

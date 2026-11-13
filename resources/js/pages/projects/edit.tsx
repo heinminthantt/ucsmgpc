@@ -38,15 +38,15 @@ const SEMESTER_PREFIXES: Record<string, string[]> = {
 function SectionHeader({ title, hint }: { title: string; hint?: string }) {
     return (
         <div>
-            <h2 className="text-sm font-medium text-stone-900">{title}</h2>
-            {hint && <p className="mt-0.5 text-[13px] text-stone-500">{hint}</p>}
+            <h2 className="text-sm font-medium text-foreground">{title}</h2>
+            {hint && <p className="mt-0.5 text-[13px] text-muted-foreground">{hint}</p>}
         </div>
     );
 }
 
-const sectionClass = 'rounded-xl border border-stone-200 bg-white p-5 space-y-4';
+const sectionClass = 'rounded-xl border border-border bg-card p-5 space-y-4';
 const textareaClass =
-    'w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-stone-300';
+    'w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-border';
 
 export default function ProjectEdit({ project }: Props) {
     const { data: departments } = useDepartments();
@@ -252,11 +252,11 @@ fd.append('supervisor_id', form.supervisorId);
 
     return (
         <>
-            <Head title={`Edit Project — ${form.title}`} />
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <header className="mb-8 space-y-1">
-                    <h1 className="text-xl font-semibold text-stone-900">Edit project</h1>
-                    <p className="max-w-xl text-sm text-stone-500">
+            <Head title={`Edit Project · ${form.title}`} />
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <header className="mb-8">
+                    <h1 className="text-3xl font-semibold text-foreground">Edit project</h1>
+                    <p className="mt-2 max-w-xl text-sm text-muted-foreground">
                         Update the details and your report, then save the changes.
                     </p>
                 </header>
@@ -267,22 +267,22 @@ fd.append('supervisor_id', form.supervisorId);
                             <section className={sectionClass}>
                                 <SectionHeader title="General information" hint="Title, summary, and objectives" />
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="title">Title <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Label htmlFor="title">Title <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                     <Input id="title" required maxLength={255} placeholder="AI-powered chatbot"
                                         value={form.title} onChange={(e) => set('title', e.target.value)} />
-                                    <p className={`text-right text-xs tabular-nums ${form.title.length > 230 ? 'text-red-600' : 'text-stone-400'}`}>
+                                    <p className={`text-right text-xs tabular-nums ${form.title.length > 230 ? 'text-red-600' : 'text-muted-foreground/70'}`}>
                                         {form.title.length}/255
                                     </p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="description">Short description <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Label htmlFor="description">Short description <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                     <textarea id="description" required rows={3}
                                         className={textareaClass}
                                         placeholder="A brief summary readers will see on the catalog card..."
                                         value={form.description} onChange={(e) => set('description', e.target.value)} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="objectives">Objectives <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Label htmlFor="objectives">Objectives <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                     <textarea id="objectives" required rows={3}
                                         className={textareaClass}
                                         placeholder="What does this project aim to achieve?"
@@ -292,13 +292,13 @@ fd.append('supervisor_id', form.supervisorId);
                                     <Label htmlFor="githubLink">GitHub link</Label>
                                     <Input id="githubLink" type="url" placeholder="https://github.com/..."
                                         value={form.githubLink} onChange={(e) => set('githubLink', e.target.value)} />
-                                    <p className="text-[13px] text-stone-500">Optional. Use the form https://github.com/owner/repository. The link is checked when you save.</p>
+                                    <p className="text-[13px] text-muted-foreground">Optional. Use the form https://github.com/owner/repository. The link is checked when you save.</p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="demoVideoUrl">Demo video link</Label>
                                     <Input id="demoVideoUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."
                                         value={form.demoVideoUrl} onChange={(e) => set('demoVideoUrl', e.target.value)} />
-                                    <p className="text-[13px] text-stone-500">Optional. YouTube or Vimeo only. It is embedded on the public project page.</p>
+                                    <p className="text-[13px] text-muted-foreground">Optional. YouTube or Vimeo only. It is embedded on the public project page.</p>
                                 </div>
                             </section>
 
@@ -309,7 +309,7 @@ fd.append('supervisor_id', form.supervisorId);
                                     { label: 'Semester', required: true, field: 'student_year', items: SEMESTERS.map((s) => ({ v: s, l: s })), placeholder: 'Select semester' },
                                 ].map(({ label, required, field, items, placeholder }) => (
                                     <div key={field} className="space-y-1.5">
-                                        <Label>{label} {required && <span className="text-stone-400" aria-hidden="true">*</span>}</Label>
+                                        <Label>{label} {required && <span className="text-muted-foreground/70" aria-hidden="true">*</span>}</Label>
                                         <Select value={(form as any)[field]} onValueChange={(v) => {
                                             set(field, v);
 
@@ -325,7 +325,7 @@ set('courseId', '');
                                     </div>
                                 ))}
                                 <div className="space-y-1.5">
-                                    <Label>Department <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Label>Department <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                     <Select value={form.departmentId} onValueChange={(v) => {
  set('departmentId', v); set('courseId', ''); 
 }}>
@@ -336,7 +336,7 @@ set('courseId', '');
                                     </Select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label>Course <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Label>Course <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                     <Select value={form.courseId} onValueChange={(v) => set('courseId', v)}
                                         disabled={!form.departmentId || !form.student_year}>
                                         <SelectTrigger className="w-full disabled:opacity-60">
@@ -345,12 +345,12 @@ set('courseId', '');
                                         <SelectContent>
                                             {filteredCourses.length === 0
                                                 ? <SelectItem disabled value="_">No courses for this semester</SelectItem>
-                                                : filteredCourses.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.code} — {c.name}</SelectItem>)
+                                                : filteredCourses.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.code} · {c.name}</SelectItem>)
                                             }
                                         </SelectContent>
                                     </Select>
                                     {(!form.departmentId || !form.student_year) && (
-                                        <p className="text-[13px] text-stone-500">Courses unlock after choosing a department and semester.</p>
+                                        <p className="text-[13px] text-muted-foreground">Courses unlock after choosing a department and semester.</p>
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
@@ -382,8 +382,8 @@ set('courseId', '');
                                     </Button>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs tabular-nums text-stone-400">{tags.length}/5 tags</p>
-                                    {tags.length >= 5 && <p className="text-xs text-stone-500">Tag limit reached</p>}
+                                    <p className="text-xs tabular-nums text-muted-foreground/70">{tags.length}/5 tags</p>
+                                    {tags.length >= 5 && <p className="text-xs text-muted-foreground">Tag limit reached</p>}
                                 </div>
                                 {tags.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
@@ -391,7 +391,7 @@ set('courseId', '');
                                             <Badge key={t} variant="secondary" className="gap-1 pr-1">
                                                 {t}
                                                 <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))}
-                                                    className="ml-1 rounded-full px-1 hover:bg-stone-200"
+                                                    className="ml-1 rounded-full px-1 hover:bg-muted"
                                                     aria-label={`Remove tag ${t}`}>
                                                     ×
                                                 </button>
@@ -404,9 +404,9 @@ set('courseId', '');
                             <section className={sectionClass}>
                                 <SectionHeader title="Team members" hint="Credit every contributor" />
                                 {members.map((m, i) => (
-                                    <div key={i} className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+                                    <div key={i} className="space-y-3 rounded-lg border border-border bg-muted/40 p-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[13px] font-medium text-stone-700">Member {i + 1}</span>
+                                            <span className="text-[13px] font-medium text-foreground/85">Member {i + 1}</span>
                                             {members.length > 1 && (
                                                 <button type="button" onClick={() => setMembers(members.filter((_, j) => j !== i))}
                                                     className="text-xs text-red-600 hover:underline"
@@ -417,7 +417,7 @@ set('courseId', '');
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <Label className="text-xs">Name <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                                <Label className="text-xs">Name <span className="text-muted-foreground/70" aria-hidden="true">*</span></Label>
                                                 <Input required placeholder="Full name" value={m.name}
                                                     onChange={(e) => {
                                                         const n = [...members]; n[i] = { ...n[i], name: e.target.value };
@@ -444,10 +444,10 @@ set('courseId', '');
 
                             <section className={sectionClass}>
                                 <SectionHeader title="Project files" hint="ZIP archives only, max 50 MB each" />
-                                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 px-4 py-6 text-center hover:bg-stone-100">
-                                    <Icon icon="mdi:cloud-upload-outline" className="text-2xl text-stone-400" aria-hidden="true" />
-                                    <span className="text-sm font-medium text-stone-900">Click to upload new ZIP files</span>
-                                    <span className="text-[13px] text-stone-500">ZIP files only · max 50 MB each</span>
+                                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-6 text-center hover:bg-muted">
+                                    <Icon icon="mdi:cloud-upload-outline" className="text-2xl text-muted-foreground/70" aria-hidden="true" />
+                                    <span className="text-sm font-medium text-foreground">Click to upload new ZIP files</span>
+                                    <span className="text-[13px] text-muted-foreground">ZIP files only · max 50 MB each</span>
                                     <input type="file" accept=".zip" multiple className="sr-only"
                                         onChange={(e) => {
                                             if (!e.target.files) {
@@ -468,17 +468,17 @@ return;
                                         }} />
                                 </label>
                                 {project.projectFiles?.length > 0 && (
-                                    <p className="text-[13px] text-stone-500">
+                                    <p className="text-[13px] text-muted-foreground">
                                         {project.projectFiles.length} existing file archive(s) attached.
                                     </p>
                                 )}
                                 {files.length > 0 && (
                                     <ul className="space-y-1.5">
                                         {files.map((f, i) => (
-                                            <li key={i} className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700">
-                                                <Icon icon="mdi:folder-zip-outline" className="shrink-0 text-stone-400" aria-hidden="true" />
+                                            <li key={i} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-foreground/85">
+                                                <Icon icon="mdi:folder-zip-outline" className="shrink-0 text-muted-foreground/70" aria-hidden="true" />
                                                 <span className="flex-1 truncate">{f.name}</span>
-                                                <span className="shrink-0 tabular-nums text-stone-400">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
+                                                <span className="shrink-0 tabular-nums text-muted-foreground/70">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -488,10 +488,10 @@ return;
 
                         <section className={`${sectionClass} flex flex-col lg:sticky lg:top-6`}>
                             <SectionHeader title="Project report" hint="The full written report of your work" />
-                            <div className="overflow-hidden rounded-lg border border-stone-200 bg-white" style={{ minHeight: 520 }}>
+                            <div className="overflow-hidden rounded-lg border border-border bg-card" style={{ minHeight: 520 }}>
                                 <ErrorBoundary>
                                     <Suspense fallback={
-                                        <div className="flex h-64 items-center justify-center text-sm text-stone-500">
+                                        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
                                             <Icon icon="mdi:loading" className="mr-2 animate-spin" aria-hidden="true" />Loading editor...
                                         </div>
                                     }>
@@ -508,9 +508,9 @@ return;
                                 </ErrorBoundary>
                             </div>
 
-                            <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-6 text-center">
-                                <h3 className="text-sm font-medium text-stone-900">Save changes?</h3>
-                                <p className="mx-auto max-w-sm text-sm text-stone-500">
+                            <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-6 text-center">
+                                <h3 className="text-sm font-medium text-foreground">Save changes?</h3>
+                                <p className="mx-auto max-w-sm text-sm text-muted-foreground">
                                     Your updated project will be saved back to the catalog.
                                 </p>
                                 <div className="flex justify-center gap-3">

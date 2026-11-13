@@ -1,6 +1,6 @@
 Hello {{ $invitedUser->name }},
 
-An account was created for you on the UCSM Project Catalog, the project
+An account was created for you on the UCSMGY Project Catalog, the project
 system for the University of Computer Studies, Magway.
 
 Activate your account and set your password here:

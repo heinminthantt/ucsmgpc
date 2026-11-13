@@ -14,8 +14,8 @@ import type { User, Project } from '@/types/catalog';
 
 type AdminTab = 'users' | 'projects' | 'departments' | 'courses';
 
-const sectionClass = 'rounded-xl border border-stone-200 bg-white p-5 sm:p-6 space-y-5';
-const rowClass = 'flex items-center justify-between gap-3 rounded-lg border border-stone-200 px-4 py-3 hover:bg-stone-50';
+const sectionClass = 'rounded-xl border border-border bg-card p-5 sm:p-6 space-y-5';
+const rowClass = 'flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3 hover:bg-muted/40';
 
 const PaginationControls = ({
     page, setPage, pageSize, setPageSize, totalItems, pageSizeOptions = [5, 10, 20, 50],
@@ -32,9 +32,9 @@ const PaginationControls = ({
     const end = Math.min((page + 1) * pageSize, totalItems);
 
     return (
-        <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-stone-100 pt-4 sm:flex-row">
-            <div className="flex items-center gap-2 text-sm text-stone-500">
-                <span>Showing <span className="font-medium text-stone-900">{totalItems > 0 ? start : 0}</span>–<span className="font-medium text-stone-900">{end}</span> of <span className="font-medium text-stone-900">{totalItems}</span></span>
+        <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-border/70 pt-4 sm:flex-row">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Showing <span className="font-medium text-foreground">{totalItems > 0 ? start : 0}</span>–<span className="font-medium text-foreground">{end}</span> of <span className="font-medium text-foreground">{totalItems}</span></span>
                 <Select value={String(pageSize)} onValueChange={(v) => {
  setPageSize(Number(v)); setPage(0); 
 }}>
@@ -53,7 +53,7 @@ const PaginationControls = ({
                 <Button size="sm" variant="outline" className="h-8 w-8 p-0" disabled={page <= 0} onClick={() => setPage(page - 1)}>
                     <Icon icon="mdi:chevron-left" className="text-sm" />
                 </Button>
-                <span className="min-w-[80px] text-center text-sm font-medium text-stone-900">
+                <span className="min-w-[80px] text-center text-sm font-medium text-foreground">
                     Page {page + 1} of {totalPages}
                 </span>
                 <Button size="sm" variant="outline" className="h-8 w-8 p-0" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
@@ -304,10 +304,10 @@ return <Badge variant="secondary">{normalized}</Badge>;
     if (me?.role !== 'ADMIN') {
         return (
             <div className="flex h-[60vh] items-center justify-center px-4">
-                <div className="w-full max-w-md space-y-3 rounded-xl border border-stone-200 bg-white p-8 text-center">
-                    <Icon icon="mdi:shield-lock-outline" className="mx-auto text-4xl text-stone-400" />
-                    <h2 className="text-base font-medium text-stone-900">Access denied</h2>
-                    <p className="text-sm text-stone-500">Admin access required.</p>
+                <div className="w-full max-w-md space-y-3 rounded-xl border border-border bg-card p-8 text-center">
+                    <Icon icon="mdi:shield-lock-outline" className="mx-auto text-4xl text-muted-foreground/70" />
+                    <h2 className="text-base font-medium text-foreground">Access denied</h2>
+                    <p className="text-sm text-muted-foreground">Admin access required.</p>
                 </div>
             </div>
         );
@@ -324,11 +324,11 @@ return <Badge variant="secondary">{normalized}</Badge>;
         <>
             <Head title="Admin dashboard" />
 
-            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="space-y-6">
-                    <header className="space-y-1">
-                        <h1 className="text-xl font-semibold text-stone-900">Admin dashboard</h1>
-                        <p className="max-w-lg text-sm text-stone-500">
+            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="space-y-8">
+                    <header>
+                        <h1 className="text-3xl font-semibold text-foreground">Admin dashboard</h1>
+                        <p className="mt-2 max-w-lg text-sm text-muted-foreground">
                             Manage users, projects, departments, and courses from a single place.
                         </p>
                     </header>
@@ -341,20 +341,20 @@ return <Badge variant="secondary">{normalized}</Badge>;
                             { label: 'Approved', value: stats.approved },
                             { label: 'Pending', value: stats.pending },
                         ].map((s) => (
-                            <div key={s.label} className="rounded-xl border border-stone-200 bg-white px-4 py-4">
-                                <p className="text-2xl font-semibold text-stone-900">{s.value}</p>
-                                <p className="mt-1 text-xs text-stone-500">{s.label}</p>
+                            <div key={s.label} className="rounded-xl border border-border bg-card px-4 py-4">
+                                <p className="text-2xl font-semibold text-foreground">{s.value}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
                             </div>
                         ))}
                     </div>
 
-                    <div className="flex flex-wrap gap-1 rounded-xl border border-stone-200 bg-white p-1 sm:w-fit">
+                    <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1 sm:w-fit">
                         {tabs.map((t) => (
                             <button
                                 key={t.value}
                                 type="button"
                                 onClick={() => setActiveTab(t.value)}
-                                className={`rounded-lg px-3 py-1.5 text-sm ${activeTab === t.value ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-500 hover:text-stone-900'}`}
+                                className={`rounded-lg px-3 py-1.5 text-sm ${activeTab === t.value ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 {t.label}
                             </button>
@@ -364,8 +364,8 @@ return <Badge variant="secondary">{normalized}</Badge>;
                     {activeTab === 'users' && (
                         <section className={sectionClass}>
                             <div className="space-y-1">
-                                <h2 className="text-sm font-medium text-stone-900">Users</h2>
-                                <p className="text-[13px] text-stone-500">Showing {filteredUsers.length} of {stats.total} active users</p>
+                                <h2 className="text-sm font-medium text-foreground">Users</h2>
+                                <p className="text-[13px] text-muted-foreground">Showing {filteredUsers.length} of {stats.total} active users</p>
                             </div>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <Input placeholder="Search by name or email..." value={userSearch} onChange={(e) => {
@@ -385,20 +385,20 @@ return <Badge variant="secondary">{normalized}</Badge>;
                             </div>
                             <div>
                                 {usersLoading ? (
-                                    <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-stone-50" />)}</div>
+                                    <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-muted/40" />)}</div>
                                 ) : filteredUsers.length === 0 ? (
-                                    <p className="py-12 text-center text-sm text-stone-500">No users match your filters.</p>
+                                    <p className="py-12 text-center text-sm text-muted-foreground">No users match your filters.</p>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {filteredUsers.map((u: User) => (
                                             <div key={u.id} className={rowClass}>
                                                 <div className="flex min-w-0 items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-100 text-sm font-medium text-stone-700">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground/85">
                                                         {(u.name?.[0] || '?').toUpperCase()}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-sm font-medium text-stone-900">{u.name || 'Unknown'}</p>
-                                                        <p className="truncate text-xs text-stone-500">{u.email || 'No email'}</p>
+                                                        <p className="truncate text-sm font-medium text-foreground">{u.name || 'Unknown'}</p>
+                                                        <p className="truncate text-xs text-muted-foreground">{u.email || 'No email'}</p>
                                                     </div>
                                                     <div className="ml-2 hidden sm:block">{roleBadge(u.role)}</div>
                                                 </div>
@@ -422,8 +422,8 @@ return <Badge variant="secondary">{normalized}</Badge>;
                     {activeTab === 'projects' && (
                         <section className={sectionClass}>
                             <div className="space-y-1">
-                                <h2 className="text-sm font-medium text-stone-900">Projects</h2>
-                                <p className="text-[13px] text-stone-500">Showing {filteredProjects.length} of {stats.totalProjects} projects</p>
+                                <h2 className="text-sm font-medium text-foreground">Projects</h2>
+                                <p className="text-[13px] text-muted-foreground">Showing {filteredProjects.length} of {stats.totalProjects} projects</p>
                             </div>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <Input placeholder="Search projects..." value={projectSearch} onChange={(e) => {
@@ -443,18 +443,18 @@ return <Badge variant="secondary">{normalized}</Badge>;
                             </div>
                             <div>
                                 {projectsLoading ? (
-                                    <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-stone-50" />)}</div>
+                                    <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-muted/40" />)}</div>
                                 ) : filteredProjects.length === 0 ? (
-                                    <p className="py-12 text-center text-sm text-stone-500">No projects match your filters.</p>
+                                    <p className="py-12 text-center text-sm text-muted-foreground">No projects match your filters.</p>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {filteredProjects.map((p: Project) => (
                                             <div key={p.id} className={rowClass}>
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium text-stone-900">{p.title || 'Untitled'}</p>
+                                                    <p className="truncate text-sm font-medium text-foreground">{p.title || 'Untitled'}</p>
                                                     <div className="mt-1 flex items-center gap-2">
                                                         {statusBadge(p.approvalStatus)}
-                                                        {p.submittedByName && <span className="text-xs text-stone-500">by {p.submittedByName}</span>}
+                                                        {p.submittedByName && <span className="text-xs text-muted-foreground">by {p.submittedByName}</span>}
                                                     </div>
                                                 </div>
                                                 <Button size="sm" variant="destructive" className="shrink-0" onClick={() => openDeleteProject(p)}>
@@ -472,8 +472,8 @@ return <Badge variant="secondary">{normalized}</Badge>;
                     {activeTab === 'departments' && (
                         <section className={sectionClass}>
                             <div className="space-y-1">
-                                <h2 className="text-sm font-medium text-stone-900">Departments</h2>
-                                <p className="text-[13px] text-stone-500">{departments?.length ?? 0} departments registered</p>
+                                <h2 className="text-sm font-medium text-foreground">Departments</h2>
+                                <p className="text-[13px] text-muted-foreground">{departments?.length ?? 0} departments registered</p>
                             </div>
                             <div className="flex gap-2">
                                 <Input
@@ -492,12 +492,12 @@ return <Badge variant="secondary">{normalized}</Badge>;
                                 </Button>
                             </div>
                             {departments?.length === 0 ? (
-                                <p className="py-10 text-center text-sm text-stone-500">No departments yet.</p>
+                                <p className="py-10 text-center text-sm text-muted-foreground">No departments yet.</p>
                             ) : (
                                 <div className="space-y-1.5">
                                     {departments?.map((d) => (
                                         <div key={d.id} className={rowClass}>
-                                            <span className="truncate text-sm font-medium text-stone-900">{d.name}</span>
+                                            <span className="truncate text-sm font-medium text-foreground">{d.name}</span>
                                             <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-600" onClick={() => openDeleteDept(d.id, d.name)}>
                                                 Delete
                                             </Button>
@@ -511,8 +511,8 @@ return <Badge variant="secondary">{normalized}</Badge>;
                     {activeTab === 'courses' && (
                         <section className={sectionClass}>
                             <div className="space-y-1">
-                                <h2 className="text-sm font-medium text-stone-900">Courses</h2>
-                                <p className="text-[13px] text-stone-500">{allCourses?.length ?? 0} courses across {departments?.length ?? 0} departments</p>
+                                <h2 className="text-sm font-medium text-foreground">Courses</h2>
+                                <p className="text-[13px] text-muted-foreground">{allCourses?.length ?? 0} courses across {departments?.length ?? 0} departments</p>
                             </div>
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                 <Input placeholder="Course name" value={newCourseName} onChange={(e) => setNewCourseName(e.target.value)} />
@@ -531,16 +531,16 @@ return <Badge variant="secondary">{normalized}</Badge>;
                                 </Button>
                             </div>
                             {allCourses?.length === 0 ? (
-                                <p className="py-10 text-center text-sm text-stone-500">No courses yet.</p>
+                                <p className="py-10 text-center text-sm text-muted-foreground">No courses yet.</p>
                             ) : (
                                 <div className="max-h-[28rem] space-y-1.5 overflow-y-auto pr-1">
                                     {allCourses?.map((c) => (
                                         <div key={c.id} className={rowClass}>
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium text-stone-900">{c.name}</p>
+                                                <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
                                                 <div className="mt-0.5 flex items-center gap-2">
-                                                    {c.code && <span className="font-mono text-xs text-stone-500">{c.code}</span>}
-                                                    <span className="text-xs text-stone-400">{(c as any).department?.name}</span>
+                                                    {c.code && <span className="font-mono text-xs text-muted-foreground">{c.code}</span>}
+                                                    <span className="text-xs text-muted-foreground/70">{(c as any).department?.name}</span>
                                                 </div>
                                             </div>
                                             <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-600" onClick={() => openDeleteCourse(c.id, c.name)}>
@@ -606,7 +606,7 @@ closeDeleteDept();
                     <DialogHeader>
                         <DialogTitle>Delete department</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete <span className="font-medium text-stone-900">"{confirmDeleteDept?.name}"</span>? Any courses assigned to this department might lose their relationship.
+                            Are you sure you want to delete <span className="font-medium text-foreground">"{confirmDeleteDept?.name}"</span>? Any courses assigned to this department might lose their relationship.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 pt-2">
@@ -627,7 +627,7 @@ closeDeleteCourse();
                     <DialogHeader>
                         <DialogTitle>Delete course</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to permanently delete <span className="font-medium text-stone-900">"{confirmDeleteCourse?.name}"</span>?
+                            Are you sure you want to permanently delete <span className="font-medium text-foreground">"{confirmDeleteCourse?.name}"</span>?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 pt-2">

@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -307,17 +307,24 @@ return;
     return (
         <>
             <Head title="My project" />
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-2xl font-semibold">{t('nav.my_project')}</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">{t('my.subtitle')}</p>
-                </div>
+            <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="space-y-8">
+                    <header>
+                        <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">{t('nav.my_project')}</h1>
+                        <p className="mt-2 text-sm text-muted-foreground">{t('my.subtitle')}</p>
+                    </header>
 
-                {projects.length === 0 && (
-                    <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-                        You do not have a project yet. Create one from <span className="font-medium text-foreground">New project</span> in the sidebar.
-                    </div>
-                )}
+                    {projects.length === 0 && (
+                        <div className="flex flex-col items-start gap-4 rounded-xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="font-medium text-foreground">No project yet</p>
+                                <p className="mt-1 text-sm text-muted-foreground">Start a proposal to begin supervision and review.</p>
+                            </div>
+                            <Button asChild>
+                                <Link href="/projects/create">New project</Link>
+                            </Button>
+                        </div>
+                    )}
 
                 {projects.length > 1 && (
                     <div className="max-w-sm space-y-1.5">
@@ -513,6 +520,7 @@ return;
                         <LogbookSection projectId={project.id} />
                     </>
                 )}
+                </div>
             </div>
         </>
     );

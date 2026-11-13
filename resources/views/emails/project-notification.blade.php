@@ -1,4 +1,4 @@
-UCSM Project Catalog
+UCSMGY Project Catalog
 
 {{ $messageText }}
 
@@ -13,4 +13,4 @@ Note: {{ $reason }}
 View the project: {{ $projectUrl }}
 
 You are receiving this because you are involved in this project on the
-UCSM Project Catalog. Sign in to see the full details and respond.
+UCSMGY Project Catalog. Sign in to see the full details and respond.

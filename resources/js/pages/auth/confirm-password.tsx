@@ -15,7 +15,7 @@ export default function ConfirmPassword() {
         <>
             <Head title="Confirm password" />
 
-            {/* Secure-area notice — reinforces context before the form */}
+            {/* Secure-area notice: reinforces context before the form */}
             <div
                 className="mb-6 flex items-center gap-3 rounded-sm border border-border bg-muted/15 px-4 py-3"
                 role="note"

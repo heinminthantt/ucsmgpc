@@ -95,7 +95,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                 />
                                 {remember && <input type="hidden" name="remember" value="on" />}
                                 <Label htmlFor="remember-ui" className="text-sm font-normal cursor-pointer">
-                                    Remember me
+                                    {t('auth.remember')}
                                 </Label>
                             </div>
 
@@ -106,24 +106,24 @@ export default function Login({ status, canResetPassword }: Props) {
                                 disabled={processing}
                             >
                                 {processing ? <Spinner /> : <Icon icon="mdi:login-variant" className="text-base" />}
-                                {processing ? 'Signing in…' : t('auth.log_in')}
+                                {processing ? t('auth.signing_in') : t('auth.log_in')}
                             </Button>
                         </div>
 
-                        {/* Ruled separator with centered glyph — editorial touch */}
+                        {/* Ruled separator with centered glyph */}
                         <div className="relative text-center" aria-hidden="true">
                             <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                            <span className="relative bg-background px-3 text-muted-foreground/60 text-xs"></span>
+                            <span className="relative bg-background px-3 text-[8px] text-gold">◆</span>
                         </div>
 
                         <p className="text-center text-sm text-muted-foreground">
-                            Don&apos;t have an account?{' '}
+                            {t('auth.no_account')}{' '}
                             <TextLink
                                 href={register()}
                                 tabIndex={6}
                                 className="text-primary hover:underline underline-offset-4 font-medium"
                             >
-                                Sign up free
+                                {t('auth.sign_up_free')}
                             </TextLink>
                         </p>
                     </>

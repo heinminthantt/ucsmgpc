@@ -28,7 +28,7 @@ class UserInviteMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Activate your UCSM Project Catalog account',
+            subject: 'Activate your UCSMGY Project Catalog account',
         );
     }
 

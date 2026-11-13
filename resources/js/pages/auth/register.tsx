@@ -38,7 +38,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="name"
-                                    placeholder="Your name"
+                                    placeholder={t('auth.placeholder_name')}
                                     aria-invalid={!!errors.name}
                                     className="focus:border-primary focus:ring-1 focus:ring-primary"
                                 />
@@ -69,12 +69,12 @@ export default function Register({ passwordRules }: Props) {
                                     required
                                     tabIndex={3}
                                     autoComplete="new-password"
-                                    placeholder="Min. 8 characters"
+                                    placeholder={t('auth.placeholder_password')}
                                     passwordrules={passwordRules}
                                     aria-invalid={!!errors.password}
                                 />
                                 <p className="text-xs italic text-muted-foreground/80">
-                                    Use at least 8 characters with a mix of letters and numbers.
+                                    {t('auth.password_hint')}
                                 </p>
                                 <InputError message={errors.password} />
                             </div>
@@ -87,7 +87,7 @@ export default function Register({ passwordRules }: Props) {
                                     required
                                     tabIndex={4}
                                     autoComplete="new-password"
-                                    placeholder="Repeat password"
+                                    placeholder={t('auth.placeholder_repeat')}
                                     passwordrules={passwordRules}
                                     aria-invalid={!!errors.password_confirmation}
                                 />
@@ -102,24 +102,24 @@ export default function Register({ passwordRules }: Props) {
                                 data-test="register-user-button"
                             >
                                 {processing ? <Spinner /> : <Icon icon="mdi:account-plus-outline" className="text-base" />}
-                                {processing ? 'Creating account…' : t('auth.register')}
+                                {processing ? t('auth.creating') : t('auth.register')}
                             </Button>
                         </div>
 
                         {/* Ruled separator with centered glyph */}
                         <div className="relative text-center" aria-hidden="true">
                             <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                            <span className="relative bg-background px-3 text-muted-foreground/60 text-xs"></span>
+                            <span className="relative bg-background px-3 text-[8px] text-gold">◆</span>
                         </div>
 
                         <p className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
+                            {t('auth.already_account')}{' '}
                             <TextLink
                                 href={login()}
                                 tabIndex={6}
                                 className="text-primary hover:underline underline-offset-4 font-medium"
                             >
-                                Log in
+                                {t('auth.log_in')}
                             </TextLink>
                         </p>
                     </>

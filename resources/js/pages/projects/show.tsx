@@ -61,31 +61,39 @@ export default function ProjectShow({ project }: Props) {
     return (
         <>
             <Head title={project.title} />
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <Link href="/projects" className="mb-6 inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <Link href="/projects" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="h-4 w-4" /> {t('show.back')}
                 </Link>
 
                 <header className="mb-8">
-                    {project.departmentName && (
-                        <p className="mb-2 text-[13px] text-stone-500">
-                            {project.departmentId ? (
-                                <Link href={`/departments/${project.departmentId}`} className="hover:text-stone-900 hover:underline">{project.departmentName}</Link>
-                            ) : project.departmentName}
-                        </p>
-                    )}
-                    <h1 className="text-2xl leading-tight font-semibold text-stone-900 sm:text-3xl">
+                    <h1 className="text-3xl leading-tight font-semibold text-foreground sm:text-4xl">
                         {project.title}
                     </h1>
                     {project.description && (
-                        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-500">
+                        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                             {project.description}
                         </p>
                     )}
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-stone-500">
-                        <Badge variant="secondary" className="font-normal">{project.approvalStatus}</Badge>
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+                        <Badge variant="secondary" className="font-normal">
+                            {{
+                                APPROVED: t('card.approved'),
+                                PENDING: t('card.pending'),
+                                REJECTED: t('card.rejected'),
+                            }[project.approvalStatus] ?? project.approvalStatus}
+                        </Badge>
+                        {project.departmentName && (
+                            project.departmentId ? (
+                                <Link href={`/departments/${project.departmentId}`} className="hover:text-foreground hover:underline">
+                                    {project.departmentName}
+                                </Link>
+                            ) : (
+                                <span>{project.departmentName}</span>
+                            )
+                        )}
                         {project.isFeatured && (
-                            <Badge className="bg-[#C15F3C] font-normal text-white hover:bg-[#C15F3C]">{t('card.featured')}</Badge>
+                            <Badge className="bg-gold font-normal text-primary hover:bg-gold">{t('card.featured')}</Badge>
                         )}
                         {project.publishedAt && (
                             <span>{t('card.published')} {format(new Date(project.publishedAt), 'MMM d, yyyy')}</span>
@@ -99,18 +107,18 @@ export default function ProjectShow({ project }: Props) {
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <article className="space-y-8 lg:col-span-2">
-                        <div className="flex flex-wrap gap-8 rounded-xl border border-stone-200 bg-white p-5">
+                        <div className="flex flex-wrap gap-8 rounded-xl border border-border bg-card p-5">
                             <div>
-                                <p className="text-[13px] text-stone-500">{t('show.supervisor')}</p>
-                                <p className="mt-0.5 text-sm font-medium text-stone-900">
+                                <p className="text-[13px] text-muted-foreground">{t('show.supervisor')}</p>
+                                <p className="mt-0.5 text-sm font-medium text-foreground">
                                     {project.supervisorName && project.supervisorId ? (
                                         <Link href={`/supervisors/${project.supervisorId}`} className="hover:underline">{project.supervisorName}</Link>
                                     ) : (project.supervisorName || t('show.unassigned'))}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[13px] text-stone-500">{t('show.submitted_by')}</p>
-                                <p className="mt-0.5 text-sm font-medium text-stone-900">{project.submittedByName || t('show.unknown')}</p>
+                                <p className="text-[13px] text-muted-foreground">{t('show.submitted_by')}</p>
+                                <p className="mt-0.5 text-sm font-medium text-foreground">{project.submittedByName || t('show.unknown')}</p>
                             </div>
                         </div>
 
@@ -118,14 +126,14 @@ export default function ProjectShow({ project }: Props) {
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {project.objectives && (
                                     <div>
-                                        <h2 className="mb-2 text-sm font-medium text-stone-900">{t('show.objectives')}</h2>
-                                        <p className="text-sm leading-relaxed text-stone-600">{project.objectives}</p>
+                                        <h2 className="mb-2 text-sm font-medium text-foreground">{t('show.objectives')}</h2>
+                                        <p className="text-sm leading-relaxed text-muted-foreground">{project.objectives}</p>
                                     </div>
                                 )}
                                 {project.benefits && (
                                     <div>
-                                        <h2 className="mb-2 text-sm font-medium text-stone-900">{t('show.benefits')}</h2>
-                                        <p className="text-sm leading-relaxed text-stone-600">{project.benefits}</p>
+                                        <h2 className="mb-2 text-sm font-medium text-foreground">{t('show.benefits')}</h2>
+                                        <p className="text-sm leading-relaxed text-muted-foreground">{project.benefits}</p>
                                     </div>
                                 )}
                             </div>
@@ -133,17 +141,17 @@ export default function ProjectShow({ project }: Props) {
 
                         {project.body && (
                             <div>
-                                <h2 className="mb-3 text-base font-medium text-stone-900">{t('show.report')}</h2>
+                                <h2 className="mb-3 text-base font-medium text-foreground">{t('show.report')}</h2>
                                 <div
-                                    className="ql-editor max-w-none p-0 text-sm leading-relaxed text-stone-700"
+                                    className="ql-editor max-w-none p-0 text-sm leading-relaxed text-foreground/85"
                                     dangerouslySetInnerHTML={{ __html: project.body }}
                                 />
                             </div>
                         )}
                         {project.demoVideoEmbedUrl && (
                             <div>
-                                <h2 className="mb-3 text-base font-medium text-stone-900">{t('show.demo_video')}</h2>
-                                <div className="aspect-video overflow-hidden rounded-xl border border-stone-200 bg-black">
+                                <h2 className="mb-3 text-base font-medium text-foreground">{t('show.demo_video')}</h2>
+                                <div className="aspect-video overflow-hidden rounded-xl border border-border bg-black">
                                     <iframe
                                         src={project.demoVideoEmbedUrl}
                                         title={t('show.demo_video')}
@@ -158,8 +166,8 @@ export default function ProjectShow({ project }: Props) {
 
                     <aside className="flex flex-col gap-4">
                         {me && (
-                            <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-4 text-sm font-medium text-stone-900">{t('show.actions')}</h2>
+                            <div className="rounded-xl border border-border bg-card p-5">
+                                <h2 className="mb-4 text-sm font-medium text-foreground">{t('show.actions')}</h2>
                                 <div className="flex flex-wrap gap-2">
                                     <Button
                                         variant={reactionData?.reacted ? 'default' : 'outline'}
@@ -211,13 +219,13 @@ export default function ProjectShow({ project }: Props) {
                         )}
 
                         {members.length > 0 && (
-                            <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.team_members')}</h2>
-                                <ul className="divide-y divide-stone-100">
+                            <div className="rounded-xl border border-border bg-card p-5">
+                                <h2 className="mb-3 text-sm font-medium text-foreground">{t('show.team_members')}</h2>
+                                <ul className="divide-y divide-border/70">
                                     {members.map((m, i) => (
                                         <li key={i} className="flex items-center justify-between py-2 text-sm first:pt-0 last:pb-0">
-                                            <span className="text-stone-700">{m.name}</span>
-                                            {m.rollNumber && <span className="text-[13px] text-stone-500">{m.rollNumber}</span>}
+                                            <span className="text-foreground/85">{m.name}</span>
+                                            {m.rollNumber && <span className="text-[13px] text-muted-foreground">{m.rollNumber}</span>}
                                         </li>
                                     ))}
                                 </ul>
@@ -225,8 +233,8 @@ export default function ProjectShow({ project }: Props) {
                         )}
 
                         {project.tags?.length > 0 && (
-                            <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.tags')}</h2>
+                            <div className="rounded-xl border border-border bg-card p-5">
+                                <h2 className="mb-3 text-sm font-medium text-foreground">{t('show.tags')}</h2>
                                 <div className="flex flex-wrap gap-1.5">
                                     {project.tags.map((t) => (
                                         <Badge key={t} variant="secondary" className="font-normal">
@@ -238,14 +246,14 @@ export default function ProjectShow({ project }: Props) {
                         )}
 
                         {(project.githubLink || project.projectFiles?.length > 0) && (
-                            <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.links_files')}</h2>
+                            <div className="rounded-xl border border-border bg-card p-5">
+                                <h2 className="mb-3 text-sm font-medium text-foreground">{t('show.links_files')}</h2>
                                 <div className="space-y-2">
                                     {project.githubLink && (
                                         <a href={project.githubLink} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center justify-between text-sm text-stone-700 hover:text-stone-900">
+                                            className="flex items-center justify-between text-sm text-foreground/85 hover:text-foreground">
                                             <span>{t('show.source_code')}</span>
-                                            <Github className="h-4 w-4 text-stone-400" />
+                                            <Github className="h-4 w-4 text-muted-foreground/70" />
                                         </a>
                                     )}
                                     {project.githubLink && project.githubVerifiedAt && (
@@ -254,12 +262,12 @@ export default function ProjectShow({ project }: Props) {
                                         </p>
                                     )}
                                     {project.projectFiles?.length > 0 && (
-                                        <div className="space-y-2 border-t border-stone-100 pt-2">
+                                        <div className="space-y-2 border-t border-border/70 pt-2">
                                             {[...project.projectFiles].reverse().map((url, i) => (
                                                 <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                                                    className="flex items-center justify-between text-sm text-stone-700 hover:text-stone-900">
+                                                    className="flex items-center justify-between text-sm text-foreground/85 hover:text-foreground">
                                                     <span>Document {i + 1}</span>
-                                                    <FileDown className="h-4 w-4 text-stone-400" />
+                                                    <FileDown className="h-4 w-4 text-muted-foreground/70" />
                                                 </a>
                                             ))}
                                         </div>
@@ -271,17 +279,17 @@ export default function ProjectShow({ project }: Props) {
                 </div>
 
                 {me && (
-                    <section className="mt-10 border-t border-stone-200 pt-8">
-                        <h2 className="mb-1 text-base font-medium text-stone-900">{t('show.comments')}</h2>
-                        <p className="mb-6 text-[13px] text-stone-500">Share feedback on this project.</p>
+                    <section className="mt-10 border-t border-border pt-8">
+                        <h2 className="mb-1 text-base font-medium text-foreground">{t('show.comments')}</h2>
+                        <p className="mb-6 text-[13px] text-muted-foreground">Share feedback on this project.</p>
 
                         <div className="max-w-3xl space-y-8">
-                            <div className="rounded-xl border border-stone-200 bg-white p-4">
-                                <label htmlFor="new-comment" className="mb-2 block text-sm font-medium text-stone-900">Add a comment</label>
+                            <div className="rounded-xl border border-border bg-card p-4">
+                                <label htmlFor="new-comment" className="mb-2 block text-sm font-medium text-foreground">Add a comment</label>
                                 <textarea
                                     id="new-comment"
                                     rows={3}
-                                    className="w-full resize-none rounded-lg border border-stone-200 bg-white p-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-300 focus:ring-0 focus:outline-none"
+                                    className="w-full resize-none rounded-lg border border-border bg-card p-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-border focus:ring-0 focus:outline-none"
                                     placeholder="Write your feedback..."
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
@@ -300,30 +308,30 @@ export default function ProjectShow({ project }: Props) {
                             <div className="space-y-6">
                                 {commentsLoading ? (
                                     <div className="flex justify-center py-6">
-                                        <Loader2 className="h-5 w-5 animate-spin text-stone-400" />
+                                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/70" />
                                     </div>
                                 ) : (comments ?? []).length === 0 ? (
-                                    <p className="py-6 text-center text-sm text-stone-500">No comments yet.</p>
+                                    <p className="py-6 text-center text-sm text-muted-foreground">No comments yet.</p>
                                 ) : (
                                     (comments ?? []).map((c: Comment) => (
-                                        <div key={c.id} className="flex gap-3 border-b border-stone-100 pb-6">
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-100 text-sm font-medium text-stone-600">
+                                        <div key={c.id} className="flex gap-3 border-b border-border/70 pb-6">
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
                                                 {c.userName?.[0] ?? '?'}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="mb-1.5 flex items-start justify-between gap-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-stone-900">{c.userName ?? 'Anonymous'}</span>
+                                                        <span className="text-sm font-medium text-foreground">{c.userName ?? 'Anonymous'}</span>
                                                         {c.userId === me.id && <Badge variant="secondary" className="font-normal">You</Badge>}
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-[13px] text-stone-500">
+                                                        <span className="text-[13px] text-muted-foreground">
                                                             {format(new Date(c.createdAt), 'MMM d, yyyy')}
                                                         </span>
                                                         {c.userId === me.id && (
                                                             <button
                                                                 onClick={() => deleteCommentMutation.mutate(c.id)}
-                                                                className="text-stone-400 hover:text-stone-900"
+                                                                className="text-muted-foreground/70 hover:text-foreground"
                                                                 aria-label="Delete comment"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -331,7 +339,7 @@ export default function ProjectShow({ project }: Props) {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <p className="text-sm leading-relaxed text-stone-700">{c.comment}</p>
+                                                <p className="text-sm leading-relaxed text-foreground/85">{c.comment}</p>
                                             </div>
                                         </div>
                                     ))

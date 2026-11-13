@@ -168,31 +168,31 @@ return;
     }
 
     return (
-        <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+        <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-3">
             <div className="flex items-center justify-between">
-                <p className="text-[13px] font-medium text-stone-900">Stage review</p>
+                <p className="text-[13px] font-medium text-foreground">Stage review</p>
                 <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="text-xs text-stone-500 hover:underline"
+                    className="text-xs text-muted-foreground hover:underline"
                 >
                     Close
                 </button>
             </div>
 
             {loading ? (
-                <p className="flex items-center gap-2 text-[13px] text-stone-500">
+                <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
                     <Icon icon="mdi:loading" className="animate-spin" aria-hidden="true" /> Loading submissions...
                 </p>
             ) : error ? (
                 <p className="text-[13px] text-red-600">{error}</p>
             ) : !latest ? (
-                <p className="text-[13px] text-stone-500">No submission is waiting for a stage review.</p>
+                <p className="text-[13px] text-muted-foreground">No submission is waiting for a stage review.</p>
             ) : (
                 <>
-                    <div className="space-y-1 text-[13px] text-stone-600">
+                    <div className="space-y-1 text-[13px] text-muted-foreground">
                         <p>
-                            Stage: <span className="font-medium text-stone-900">{latest.stage.replace(/_/g, ' ')}</span>
+                            Stage: <span className="font-medium text-foreground">{latest.stage.replace(/_/g, ' ')}</span>
                             {' · '}Version {latest.version}
                         </p>
                         {latest.submittedByName && <p>Submitted by {latest.submittedByName}</p>}
@@ -202,26 +202,26 @@ return;
                     </div>
 
                     {latest.stage === 'final' && (evaluation?.rubricTemplate?.criteria ?? []).length > 0 && (
-                        <div className="space-y-2 rounded-lg border border-stone-200 bg-white p-3">
-                            <p className="text-[13px] font-medium text-stone-900">
+                        <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+                            <p className="text-[13px] font-medium text-foreground">
                                 Rubric scores (pass at {evaluation?.rubricTemplate?.passThreshold ?? 50})
                             </p>
                             {(evaluation?.rubricTemplate?.criteria ?? []).map((c) => (
-                                <label key={c.key} className="flex items-center justify-between gap-3 text-[13px] text-stone-600">
+                                <label key={c.key} className="flex items-center justify-between gap-3 text-[13px] text-muted-foreground">
                                     <span>
-                                        {c.label} <span className="text-stone-400">({c.weight}%)</span>
+                                        {c.label} <span className="text-muted-foreground/70">({c.weight}%)</span>
                                     </span>
                                     <input
                                         type="number"
                                         min={0}
                                         max={c.max}
-                                        className="w-20 rounded-lg border border-stone-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                        className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                                         value={scores[c.key] ?? ''}
                                         onChange={(e) => setScores((p) => ({ ...p, [c.key]: e.target.value }))}
                                     />
                                 </label>
                             ))}
-                            <p className="text-xs text-stone-400">
+                            <p className="text-xs text-muted-foreground/70">
                                 With an examiner assigned, the result is confirmed only when both of you have reviewed.
                             </p>
                         </div>
@@ -229,7 +229,7 @@ return;
 
                     <textarea
                         rows={3}
-                        className="w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                        className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                         placeholder="Comment (required for request changes and decline)"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
@@ -248,31 +248,31 @@ return;
                     </div>
 
                     {canRecordDefense && (
-                        <div className="space-y-2 border-t border-stone-200 pt-3">
-                            <p className="text-[13px] font-medium text-stone-900">Defense</p>
+                        <div className="space-y-2 border-t border-border pt-3">
+                            <p className="text-[13px] font-medium text-foreground">Defense</p>
                             {evaluation?.defense && (
-                                <p className="text-[13px] text-stone-500">
+                                <p className="text-[13px] text-muted-foreground">
                                     Scheduled: {evaluation.defense.scheduledAt ? new Date(evaluation.defense.scheduledAt).toLocaleString() : ''}
                                     {evaluation.defense.venue ? ` · ${evaluation.defense.venue}` : ''}
                                 </p>
                             )}
                             <input
                                 type="datetime-local"
-                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                                 value={defense.scheduled_at}
                                 onChange={(e) => setDefense((p) => ({ ...p, scheduled_at: e.target.value }))}
                             />
                             <input
                                 type="text"
                                 placeholder="Venue (optional)"
-                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                                 value={defense.venue}
                                 onChange={(e) => setDefense((p) => ({ ...p, venue: e.target.value }))}
                             />
                             <input
                                 type="text"
                                 placeholder="Note (optional)"
-                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                                 value={defense.note}
                                 onChange={(e) => setDefense((p) => ({ ...p, note: e.target.value }))}
                             />
@@ -324,10 +324,10 @@ export default function SupervisorDashboard() {
             <>
                 <Head title="Access denied" />
                 <div className="flex h-[60vh] items-center justify-center px-4">
-                    <div className="w-full max-w-md space-y-3 rounded-xl border border-stone-200 bg-white p-8 text-center">
-                        <Icon icon="mdi:shield-lock-outline" className="mx-auto text-4xl text-stone-400" />
-                        <h2 className="text-base font-medium text-stone-900">Access denied</h2>
-                        <p className="text-sm text-stone-500">You don't have supervisor access.</p>
+                    <div className="w-full max-w-md space-y-3 rounded-xl border border-border bg-card p-8 text-center">
+                        <Icon icon="mdi:shield-lock-outline" className="mx-auto text-4xl text-muted-foreground/70" />
+                        <h2 className="text-base font-medium text-foreground">Access denied</h2>
+                        <p className="text-sm text-muted-foreground">You don't have supervisor access.</p>
                     </div>
                 </div>
             </>
@@ -337,62 +337,62 @@ export default function SupervisorDashboard() {
     return (
         <>
             <Head title="Supervisor dashboard" />
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
                 <div className="space-y-8">
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="space-y-1">
-                            <h1 className="text-xl font-semibold text-stone-900">Supervisor dashboard</h1>
-                            <p className="text-sm text-stone-500">Review and approve pending student projects.</p>
+                        <div>
+                            <h1 className="text-3xl font-semibold text-foreground">Supervisor dashboard</h1>
+                            <p className="mt-2 text-sm text-muted-foreground">Review and approve pending student projects.</p>
                         </div>
-                        <div className="rounded-xl border border-stone-200 bg-white px-5 py-3 text-center">
-                            <div className="text-2xl font-semibold text-stone-900">{pending?.length ?? 0}</div>
-                            <div className="text-xs text-stone-500">Pending</div>
+                        <div className="rounded-lg border border-border bg-card px-4 py-2.5 text-center">
+                            <div className="font-display text-xl leading-none font-semibold text-foreground">{pending?.length ?? 0}</div>
+                            <div className="mt-1 text-[11px] text-muted-foreground">Pending</div>
                         </div>
                     </div>
 
                     {isLoading ? (
                         <div className="flex justify-center py-16">
-                            <Icon icon="mdi:loading" className="animate-spin text-3xl text-stone-400" />
+                            <Icon icon="mdi:loading" className="animate-spin text-3xl text-muted-foreground/70" />
                         </div>
                     ) : isError ? (
-                        <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-8 text-center">
+                        <div className="space-y-3 rounded-xl border border-border bg-card p-8 text-center">
                             <Icon icon="mdi:alert-circle-outline" className="mx-auto text-3xl text-red-600" />
-                            <p className="text-sm font-medium text-stone-900">Failed to load projects</p>
+                            <p className="text-sm font-medium text-foreground">Failed to load projects</p>
                             <Button variant="outline" size="sm" onClick={refreshPending}>Retry</Button>
                         </div>
                     ) : !pending?.length ? (
-                        <div className="space-y-2 rounded-xl border border-stone-200 bg-white p-10 text-center">
-                            <Icon icon="mdi:check-circle-outline" className="mx-auto text-4xl text-stone-400" />
-                            <h2 className="text-base font-medium text-stone-900">All caught up</h2>
-                            <p className="text-sm text-stone-500">No projects are waiting for your review.</p>
+                        <div className="space-y-2 rounded-xl border border-border bg-card p-10 text-center">
+                            <Icon icon="mdi:check-circle-outline" className="mx-auto text-4xl text-muted-foreground/70" />
+                            <h2 className="text-base font-medium text-foreground">All caught up</h2>
+                            <p className="text-sm text-muted-foreground">No projects are waiting for your review.</p>
                         </div>
                     ) : (
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                             {pending.map((project: Project) => (
-                                <div key={project.id} className="flex flex-col gap-4 rounded-xl border border-stone-200 bg-white p-5">
+                                <div key={project.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
                                     <div className="space-y-2">
                                         <div className="flex items-start justify-between gap-2">
-                                            <h3 className="line-clamp-2 text-sm font-medium text-stone-900">{project.title}</h3>
+                                            <h3 className="line-clamp-2 text-sm font-medium text-foreground">{project.title}</h3>
                                             <Badge variant="secondary" className="shrink-0 text-xs">Pending</Badge>
                                         </div>
-                                        <p className="line-clamp-2 text-[13px] leading-relaxed text-stone-500">{project.description}</p>
+                                        <p className="line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{project.description}</p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 rounded-lg bg-stone-50 p-3 text-center">
+                                    <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-3 text-center">
                                         <div>
-                                            <p className="text-xs text-stone-400">Academic year</p>
-                                            <p className="mt-0.5 text-sm font-medium text-stone-900">{project.academic_year ?? '—'}</p>
+                                            <p className="text-xs text-muted-foreground/70">Academic year</p>
+                                            <p className="mt-0.5 text-sm font-medium text-foreground">{project.academic_year ?? '-'}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-stone-400">Semester</p>
-                                            <p className="mt-0.5 text-sm font-medium text-stone-900">{project.student_year ?? '—'}</p>
+                                            <p className="text-xs text-muted-foreground/70">Semester</p>
+                                            <p className="mt-0.5 text-sm font-medium text-foreground">{project.student_year ?? '-'}</p>
                                         </div>
                                     </div>
 
                                     {project.objectives && (
                                         <div className="space-y-1">
-                                            <p className="text-xs font-medium text-stone-700">Objectives</p>
-                                            <p className="line-clamp-3 border-l-2 border-stone-200 pl-3 text-[13px] leading-relaxed text-stone-500">
+                                            <p className="text-xs font-medium text-foreground/85">Objectives</p>
+                                            <p className="line-clamp-3 border-l-2 border-border pl-3 text-[13px] leading-relaxed text-muted-foreground">
                                                 {project.objectives}
                                             </p>
                                         </div>
@@ -409,7 +409,7 @@ export default function SupervisorDashboard() {
                                         </div>
                                     )}
 
-                                    <div className="mt-auto space-y-3 border-t border-stone-100 pt-4">
+                                    <div className="mt-auto space-y-3 border-t border-border/70 pt-4">
                                         <div className="grid grid-cols-3 gap-2">
                                             <Button size="sm" className="gap-1"
                                                 disabled={approveMutation.isPending}
@@ -428,7 +428,7 @@ export default function SupervisorDashboard() {
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <p className="text-xs font-medium text-stone-700">Stage review</p>
+                                            <p className="text-xs font-medium text-foreground/85">Stage review</p>
                                             <StageReviewPanel projectId={project.id} onReviewed={refreshPending} />
                                         </div>
                                     </div>
@@ -447,13 +447,13 @@ export default function SupervisorDashboard() {
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-3">
-                        <p className="text-sm text-stone-500">
-                            Provide a reason for rejecting <span className="font-medium text-stone-900">"{rejectProject?.title}"</span>.
+                        <p className="text-sm text-muted-foreground">
+                            Provide a reason for rejecting <span className="font-medium text-foreground">"{rejectProject?.title}"</span>.
                         </p>
-                        <textarea rows={4} className="w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                        <textarea rows={4} className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                             placeholder="Detailed rejection reason..."
                             value={reason} onChange={(e) => setReason(e.target.value)} />
-                        <p className="rounded-lg bg-stone-50 p-3 text-[13px] text-stone-500">
+                        <p className="rounded-lg bg-muted/40 p-3 text-[13px] text-muted-foreground">
                             Provide constructive feedback to help the student improve their project.
                         </p>
                     </div>

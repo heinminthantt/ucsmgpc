@@ -6,96 +6,142 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── Minimal warm-neutral theme (stone + clay accent), Inter everywhere ── */
+/* ── MiSans Myanmar (self-hosted) ─────────────────────────────────────────
+   Myanmar text falls back to MiSans through the font stacks below.
+   Files live in public/fonts/misans-myanmar. */
+@font-face {
+    font-family: 'MiSans Myanmar';
+    src: url('/fonts/misans-myanmar/MiSansMyanmar-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'MiSans Myanmar';
+    src: url('/fonts/misans-myanmar/MiSansMyanmar-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'MiSans Myanmar';
+    src: url('/fonts/misans-myanmar/MiSansMyanmar-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'MiSans Myanmar';
+    src: url('/fonts/misans-myanmar/MiSansMyanmar-Semibold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'MiSans Myanmar';
+    src: url('/fonts/misans-myanmar/MiSansMyanmar-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ── University theme: ink navy, parchment, antique gold ────────────────── */
 :root {
-    --radius: 0.625rem;
+    --radius: 0.5rem;
+    --gold: #b08a4f;
 
-    --background: #fafaf9;
-    --foreground: #1c1917;
-    --card: #ffffff;
-    --card-foreground: #1c1917;
-    --popover: #ffffff;
-    --popover-foreground: #1c1917;
+    --background: #f7f3ea;
+    --foreground: #1b2430;
+    --card: #fffdf8;
+    --card-foreground: #1b2430;
+    --popover: #fffdf8;
+    --popover-foreground: #1b2430;
 
-    /* Muse clay */
-    --primary: #c15f3c;
-    --primary-foreground: #ffffff;
+    --primary: #132a45;
+    --primary-foreground: #f8f3e6;
 
-    --secondary: #f5f5f4;
-    --secondary-foreground: #292524;
-    --muted: #f5f5f4;
-    --muted-foreground: #78716c;
-    --accent: #f5f5f4;
-    --accent-foreground: #292524;
-    --destructive: #b91c1c;
-    --destructive-foreground: #ffffff;
+    --secondary: #efe8da;
+    --secondary-foreground: #2b3442;
+    --muted: #efe8da;
+    --muted-foreground: #6f6a5e;
+    --accent: #f2e9d6;
+    --accent-foreground: #1b2430;
+    --destructive: #a3312f;
+    --destructive-foreground: #fff8f3;
 
-    --border: #e7e5e4;
-    --input: #e7e5e4;
-    --ring: #d97757;
+    --border: #e2d9c9;
+    --input: #ddd2bf;
+    --ring: #b08a4f;
 
-    --chart-1: #c15f3c;
-    --chart-2: #d97757;
-    --chart-3: #a8a29e;
-    --chart-4: #78716c;
-    --chart-5: #44403c;
+    --chart-1: #132a45;
+    --chart-2: #b08a4f;
+    --chart-3: #6f7d8c;
+    --chart-4: #a89a80;
+    --chart-5: #46617f;
 
-    --sidebar: #fafaf9;
-    --sidebar-foreground: #44403c;
-    --sidebar-primary: #c15f3c;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f0efed;
-    --sidebar-accent-foreground: #1c1917;
-    --sidebar-border: #e7e5e4;
-    --sidebar-ring: #d97757;
+    --sidebar: #0e1e33;
+    --sidebar-foreground: #d8d0bf;
+    --sidebar-primary: #c9a86a;
+    --sidebar-primary-foreground: #0e1e33;
+    --sidebar-accent: #1a2e49;
+    --sidebar-accent-foreground: #f6f1e4;
+    --sidebar-border: #233650;
+    --sidebar-ring: #c9a86a;
 
-    --font-sans: 'Inter Variable', Inter, ui-sans-system, system-ui, sans-serif;
+    --font-sans: 'Inter Variable', 'MiSans Myanmar', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Inter Variable', 'MiSans Myanmar', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 .dark {
-    --background: #1c1917;
-    --foreground: #fafaf9;
-    --card: #292524;
-    --card-foreground: #fafaf9;
-    --popover: #292524;
-    --popover-foreground: #fafaf9;
-    --primary: #d97757;
-    --primary-foreground: #ffffff;
-    --secondary: #292524;
-    --secondary-foreground: #fafaf9;
-    --muted: #292524;
-    --muted-foreground: #a8a29e;
-    --accent: #292524;
-    --accent-foreground: #fafaf9;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #44403c;
-    --input: #44403c;
-    --ring: #d97757;
-    --chart-1: #d97757;
-    --chart-2: #c15f3c;
-    --chart-3: #a8a29e;
-    --chart-4: #78716c;
-    --chart-5: #d6d3d1;
+    --gold: #d3b77c;
 
-    --sidebar: #1c1917;
-    --sidebar-foreground: #d6d3d1;
-    --sidebar-primary: #d97757;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #292524;
-    --sidebar-accent-foreground: #fafaf9;
-    --sidebar-border: #44403c;
-    --sidebar-ring: #d97757;
+    --background: #121a24;
+    --foreground: #f2ecdf;
+    --card: #19232f;
+    --card-foreground: #f2ecdf;
+    --popover: #19232f;
+    --popover-foreground: #f2ecdf;
+    --primary: #d3b77c;
+    --primary-foreground: #14202e;
+    --secondary: #1e2a38;
+    --secondary-foreground: #f2ecdf;
+    --muted: #1e2a38;
+    --muted-foreground: #a9a294;
+    --accent: #263243;
+    --accent-foreground: #f2ecdf;
+    --destructive: #c25b56;
+    --destructive-foreground: #fff8f3;
+    --border: #2c3a4b;
+    --input: #33425555;
+    --ring: #d3b77c;
+    --chart-1: #d3b77c;
+    --chart-2: #8aa3bf;
+    --chart-3: #b6a176;
+    --chart-4: #6f7d8c;
+    --chart-5: #e9dcc2;
+
+    --sidebar: #0b1726;
+    --sidebar-foreground: #d8d0bf;
+    --sidebar-primary: #d3b77c;
+    --sidebar-primary-foreground: #0b1726;
+    --sidebar-accent: #172a42;
+    --sidebar-accent-foreground: #f6f1e4;
+    --sidebar-border: #20324a;
+    --sidebar-ring: #d3b77c;
 }
 
 @theme inline {
     --font-sans: var(--font-sans);
-    --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-display: var(--font-display);
+    --font-mono: var(--font-mono);
 
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
+    --radius-sm: calc(var(--radius) - 2px);
+    --radius-md: var(--radius);
+    --radius-lg: calc(var(--radius) + 2px);
+    --radius-xl: calc(var(--radius) + 6px);
+
+    --color-gold: var(--gold);
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -129,20 +175,64 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Keep legacy warm-neutral classes in step with the theme. */
+    --color-stone-50: #faf7f0;
+    --color-stone-100: #f4eee2;
+    --color-stone-200: #e7ddcc;
+    --color-stone-300: #d7c9b2;
+    --color-stone-400: #ab9c83;
+    --color-stone-500: #7e725f;
+    --color-stone-600: #5f5547;
+    --color-stone-700: #443c31;
+    --color-stone-800: #2a2723;
+    --color-stone-900: #1a2430;
 }
 
 @layer base {
     * {
         @apply border-border;
     }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
     body {
         background-color: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
         font-size: 14px;
+        line-height: 1.6;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
+
+    h1 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        font-optical-sizing: auto;
+    }
+
+    :lang(my) {
+        line-height: 1.75;
+        letter-spacing: 0;
+    }
+
+    :lang(my) h1,
+    :lang(my) h2,
+    :lang(my) h3 {
+        line-height: 1.5;
+        letter-spacing: 0;
+    }
+
+    ::selection {
+        background-color: color-mix(in srgb, var(--gold) 35%, transparent);
+        color: var(--foreground);
+    }
+
     button:not(:disabled),
     [role='button']:not(:disabled) {
         cursor: pointer;
@@ -155,17 +245,17 @@
     to { opacity: 1; }
 }
 .animate-page-enter {
-    animation: fadeIn 0.2s ease-out both;
+    animation: fadeIn 0.25s ease-out both;
 }
 
-/* Quill editor (project body) — plain, neutral */
+/* Quill editor (project body) */
 .dark .ql-toolbar.ql-snow,
 .dark .ql-container.ql-snow {
     border-color: var(--border);
 }
 .dark .ql-toolbar .ql-stroke { stroke: var(--foreground); }
 .dark .ql-toolbar .ql-fill { fill: var(--foreground); }
-.dark .ql-toolbar .ql-picker { color: var(--foreground); }
+.dark .ql-picker { color: var(--foreground); }
 .dark .ql-picker-options { background-color: var(--card); }
 .dark .ql-editor { color: var(--foreground); background-color: var(--card); }
 .ql-container.ql-snow { font-family: var(--font-sans); font-size: 14px; }

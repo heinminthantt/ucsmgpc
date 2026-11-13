@@ -10,11 +10,11 @@ export default function SavedProjects() {
     return (
         <>
             <Head title="Saved projects" />
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-stone-900">Saved projects</h1>
-                        <p className="mt-1 text-sm text-stone-500">
+                        <h1 className="text-3xl font-semibold text-foreground">Saved projects</h1>
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Projects you&apos;ve bookmarked for later reference.
                         </p>
                     </div>
@@ -32,10 +32,10 @@ export default function SavedProjects() {
                         ))}
                     </div>
                 ) : !projects?.length ? (
-                    <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white px-6 py-16 text-center">
-                        <Bookmark className="h-8 w-8 text-stone-300" />
-                        <h2 className="text-sm font-medium text-stone-900">No saved projects yet</h2>
-                        <p className="max-w-sm text-[13px] text-stone-500">Browse projects and click the bookmark icon to save them here.</p>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center">
+                        <Bookmark className="h-8 w-8 text-muted-foreground/45" />
+                        <h2 className="text-sm font-medium text-foreground">No saved projects yet</h2>
+                        <p className="max-w-sm text-[13px] text-muted-foreground">Browse projects and click the bookmark icon to save them here.</p>
                         <Button asChild size="sm" className="mt-1">
                             <Link href="/projects">
                                 <Compass /> Explore projects

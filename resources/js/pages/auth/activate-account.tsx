@@ -44,7 +44,7 @@ export default function ActivateAccount({ token, email, name, invalidReason }: P
                         <h1 className="text-lg font-semibold text-foreground">Activate your account</h1>
                         <p className="text-sm text-muted-foreground">
                             {name ? `Welcome, ${name}. ` : ''}Set a password for {email} to finish
-                            setting up your UCSM Project Catalog account.
+                            setting up your UCSMGY Project Catalog account.
                         </p>
                     </div>
 

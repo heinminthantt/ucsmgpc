@@ -36,11 +36,11 @@ export default function NotificationsPage() {
     return (
         <>
             <Head title="Notifications" />
-            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="mb-6 flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-xl font-semibold text-stone-900">Notifications</h1>
-                        <p className="text-sm text-stone-500">
+            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="mb-8 flex items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-semibold text-foreground">Notifications</h1>
+                        <p className="mt-2 text-sm text-muted-foreground">
                             {unread > 0 ? `${unread} unread` : 'All caught up'}
                         </p>
                     </div>
@@ -54,14 +54,14 @@ export default function NotificationsPage() {
                 {isLoading ? (
                     <div className="space-y-3">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="h-20 animate-pulse rounded-xl border border-stone-200 bg-stone-50" />
+                            <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-muted/40" />
                         ))}
                     </div>
                 ) : !notifications?.length ? (
-                    <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white px-6 py-16 text-center">
-                        <Icon icon="mdi:bell-sleep-outline" className="text-5xl text-stone-300" />
-                        <h2 className="text-base font-medium text-stone-900">No notifications yet</h2>
-                        <p className="text-sm text-stone-500">You'll see project comments, approvals, and reviews here.</p>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-16 text-center">
+                        <Icon icon="mdi:bell-sleep-outline" className="text-5xl text-muted-foreground/45" />
+                        <h2 className="text-base font-medium text-foreground">No notifications yet</h2>
+                        <p className="text-sm text-muted-foreground">You'll see project comments, approvals, and reviews here.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -71,33 +71,33 @@ export default function NotificationsPage() {
                             return (
                                 <div
                                     key={n.id}
-                                    className={`cursor-pointer rounded-xl border bg-white p-5 hover:bg-stone-50 ${!n.is_read ? 'border-stone-300' : 'border-stone-200'}`}
+                                    className={`cursor-pointer rounded-xl border bg-card p-5 hover:bg-muted/40 ${!n.is_read ? 'border-border' : 'border-border'}`}
                                     onClick={() => !n.is_read && markReadMutation.mutate(n.id)}
                                 >
                                     <div className="flex items-start gap-4">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                             <Icon icon={cfg.icon} className="text-xl" />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="mb-1.5 flex items-center gap-2">
                                                 <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>
                                                 {!n.is_read && (
-                                                    <span className="h-2 w-2 rounded-full bg-stone-800" />
+                                                    <span className="h-2 w-2 rounded-full bg-foreground" />
                                                 )}
                                             </div>
-                                            <p className="text-sm font-medium text-stone-900">{n.message}</p>
+                                            <p className="text-sm font-medium text-foreground">{n.message}</p>
                                             {n.project_title && (
-                                                <p className="mt-1 text-[13px] text-stone-500">
-                                                    Project: <Link href={`/projects/${n.project_id}/view`} className="text-stone-700 hover:underline">{n.project_title}</Link>
+                                                <p className="mt-1 text-[13px] text-muted-foreground">
+                                                    Project: <Link href={`/projects/${n.project_id}/view`} className="text-foreground/85 hover:underline">{n.project_title}</Link>
                                                 </p>
                                             )}
                                             {n.comment_text && (
-                                                <p className="mt-2 line-clamp-2 border-l-2 border-stone-200 pl-3 text-[13px] text-stone-500">"{n.comment_text}"</p>
+                                                <p className="mt-2 line-clamp-2 border-l-2 border-border pl-3 text-[13px] text-muted-foreground">"{n.comment_text}"</p>
                                             )}
                                             {n.rejection_reason && (
                                                 <p className="mt-2 border-l-2 border-red-200 pl-3 text-[13px] text-red-600">{n.rejection_reason}</p>
                                             )}
-                                            <p className="mt-2 text-xs text-stone-400">
+                                            <p className="mt-2 text-xs text-muted-foreground/70">
                                                 {format(new Date(n.created_at), 'MMM d, yyyy · h:mm a')}
                                             </p>
                                         </div>

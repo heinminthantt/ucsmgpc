@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { AlertCircle, ChevronLeft, ChevronRight, FolderSearch, Search } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, FolderSearch, Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { FilterModal } from '@/components/filter-modal';
 import { ProjectCard } from '@/components/project-card';
@@ -49,26 +49,26 @@ export default function ProjectsIndex() {
     return (
         <>
             <Head title="Projects" />
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <header className="mb-6">
-                    <h1 className="text-2xl font-semibold text-stone-900">{t('catalog.title')}</h1>
-                    <p className="mt-1 text-sm text-stone-500">
+            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <header className="mb-8">
+                    <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">{t('catalog.title')}</h1>
+                    <p className="mt-2 text-sm text-muted-foreground">
                         {data?.totalElements != null ? `${data.totalElements} ${t('catalog.count_suffix')}` : t('catalog.subtitle')}
                     </p>
                 </header>
 
-                <div className="mb-6 flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-3 sm:flex-row sm:items-center">
-                    <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <div className="mb-8 flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-[0_10px_30px_-24px_rgba(19,42,69,0.4)] sm:flex-row sm:items-center">
+                    <div className="relative min-w-[200px] flex-1 sm:max-w-md">
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gold" />
                         <Input
-                            className="w-full pl-9"
+                            className="h-10 w-full border-border/70 bg-background pl-9"
                             placeholder={t('catalog.search_placeholder')}
                             value={filters.keyword}
                             onChange={(e) => change('keyword', e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:ml-auto">
                         <Select
                             value={`${filters.sortBy}:${filters.sortDirection}`}
                             onValueChange={(v) => {
@@ -76,7 +76,7 @@ export default function ProjectsIndex() {
                                 setFilters((prev) => ({ ...prev, sortBy, sortDirection, page: 0 }));
                             }}
                         >
-                            <SelectTrigger className="w-40 shrink-0">
+                            <SelectTrigger className="h-10 w-44 shrink-0 border-border/70 bg-background">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -96,44 +96,50 @@ export default function ProjectsIndex() {
                 </div>
 
                 {featured.length > 0 && (
-                    <section className="mb-8">
-                        <h2 className="mb-3 text-base font-medium text-stone-900">{t('catalog.featured')}</h2>
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <section className="mb-10">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="flex items-center gap-3 font-display text-xl font-medium text-foreground">
+                                <span className="h-px w-7 bg-gold" />
+                                {t('catalog.featured')}
+                            </h2>
+                            <SlidersHorizontal className="size-4 text-muted-foreground/50" />
+                        </div>
+                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {featured.map((p) => <ProjectCard key={p.id} project={p} />)}
                         </div>
                     </section>
                 )}
 
                 {isLoading ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {Array.from({ length: 8 }).map((_, i) => (
-                            <Skeleton key={i} className="h-72 rounded-xl" />
+                            <Skeleton key={i} className="h-80 rounded-lg" />
                         ))}
                     </div>
                 ) : isError ? (
-                    <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white px-6 py-16 text-center">
-                        <AlertCircle className="h-8 w-8 text-stone-300" />
-                        <h2 className="text-sm font-medium text-stone-900">{t('catalog.failed_title')}</h2>
-                        <p className="text-[13px] text-stone-500">{t('catalog.failed_desc')}</p>
+                    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card px-6 py-16 text-center">
+                        <AlertCircle className="h-8 w-8 text-muted-foreground/40" />
+                        <h2 className="font-display text-lg text-foreground">{t('catalog.failed_title')}</h2>
+                        <p className="text-[13px] text-muted-foreground">{t('catalog.failed_desc')}</p>
                         <Button size="sm" onClick={() => window.location.reload()}>{t('catalog.try_again')}</Button>
                     </div>
                 ) : projects.length === 0 ? (
-                    <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white px-6 py-16 text-center">
-                        <FolderSearch className="h-8 w-8 text-stone-300" />
-                        <h2 className="text-sm font-medium text-stone-900">{t('catalog.empty_title')}</h2>
-                        <p className="text-[13px] text-stone-500">{t('catalog.empty_desc')}</p>
+                    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card px-6 py-16 text-center">
+                        <FolderSearch className="h-8 w-8 text-muted-foreground/40" />
+                        <h2 className="font-display text-lg text-foreground">{t('catalog.empty_title')}</h2>
+                        <p className="text-[13px] text-muted-foreground">{t('catalog.empty_desc')}</p>
                         <Button variant="outline" size="sm" onClick={() => setFilters(initialFilters)}>
                             {t('catalog.clear_filters')}
                         </Button>
                     </div>
                 ) : (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
                     </div>
                 )}
 
                 {totalPages > 1 && (
-                    <div className="mt-8 flex items-center justify-center gap-1.5">
+                    <div className="mt-10 flex items-center justify-center gap-1.5">
                         <Button
                             variant="outline"
                             size="sm"

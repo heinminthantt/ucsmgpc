@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowRight, Bell, CheckCircle2, ClipboardCheck, Clock, Compass, Folder, FolderOpen, Plus, Shield } from 'lucide-react';
 import { ProjectCard } from '@/components/project-card';
-import { Button, Card, CardContent } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useMe, useUserProjects, useNotifications } from '@/hooks/useCatalog';
 import { useT } from '@/i18n';
 
@@ -24,14 +24,14 @@ export default function Dashboard() {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="space-y-8">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="space-y-9">
+                    <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-stone-900">
+                            <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
                                 {t('dash.welcome_back')}{me?.name ? `, ${me.name.split(' ')[0]}` : ''}
                             </h1>
-                            <p className="mt-1 text-sm text-stone-500">
+                            <p className="mt-2 text-sm text-muted-foreground">
                                 {t('dash.happening')}
                             </p>
                         </div>
@@ -47,31 +47,30 @@ export default function Dashboard() {
                                 </Link>
                             </Button>
                         </div>
-                    </div>
+                    </header>
 
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                         {stats.map((s) => (
-                            <Link key={s.label} href={s.href}>
-                                <Card className="p-5 transition-colors hover:border-stone-300">
-                                    <CardContent className="flex items-center gap-3 p-0">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500">
-                                            <s.icon className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <div className="text-xl font-semibold text-stone-900">{s.value}</div>
-                                            <div className="text-[13px] text-stone-500">{s.label}</div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                            <Link key={s.label} href={s.href} className="group">
+                                <div className="h-full rounded-lg border border-border bg-card p-5 transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-[0_14px_30px_-24px_rgba(19,42,69,0.45)]">
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex size-9 items-center justify-center rounded-full bg-primary/[0.06] text-primary dark:bg-gold/10 dark:text-gold">
+                                            <s.icon className="size-4.5" strokeWidth={1.7} />
+                                        </span>
+                                        <ArrowRight className="size-4 text-muted-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-gold" />
+                                    </div>
+                                    <div className="font-display mt-5 text-3xl leading-none font-semibold text-foreground">{s.value}</div>
+                                    <div className="mt-1.5 text-[12px] text-muted-foreground">{s.label}</div>
+                                </div>
                             </Link>
                         ))}
                     </div>
 
-                    {(me?.role === 'SUPERVISOR' || me?.role === 'ADMIN') && (
-                        <div className="rounded-xl border border-stone-200 bg-white p-5">
-                            <div className="mb-4 flex items-center gap-2">
-                                <ClipboardCheck className="h-5 w-5 text-stone-400" />
-                                <h2 className="text-sm font-medium text-stone-900">{t('dash.quick_actions')}</h2>
+                    {(me?.role === 'SUPERVISOR' || me?.role === 'ADMIN' || me?.role === 'DEPARTMENT_ADMIN') && (
+                        <div className="rounded-lg border border-border bg-card p-5">
+                            <div className="mb-4 flex items-center gap-2.5">
+                                <ClipboardCheck className="size-4 text-gold" />
+                                <h2 className="font-display text-lg text-foreground">{t('dash.quick_actions')}</h2>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <Button asChild variant="outline" size="sm">
@@ -92,24 +91,29 @@ export default function Dashboard() {
 
                     <div>
                         <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-base font-medium text-stone-900">{t('dash.recent')}</h2>
-                            <Link href="/profile" className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900">
+                            <h2 className="flex items-center gap-3 font-display text-xl font-medium text-foreground">
+                                <span className="h-px w-7 bg-gold" />
+                                {t('dash.recent')}
+                            </h2>
+                            <Link href="/profile" className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
                                 {t('dash.view_all')} <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
                         {recentProjects.length === 0 ? (
-                            <div className="rounded-xl border border-stone-200 bg-white px-6 py-12 text-center">
-                                <Folder className="mx-auto h-8 w-8 text-stone-300" />
-                                <p className="mt-3 text-sm font-medium text-stone-900">{t('dash.no_projects_title')}</p>
-                                <p className="mt-1 text-[13px] text-stone-500">{t('dash.no_projects_desc')}</p>
-                                <Button asChild size="sm" className="mt-4">
+                            <div className="rounded-lg border border-border bg-card px-6 py-14 text-center">
+                                <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
+                                    <Folder className="size-5 text-muted-foreground/60" />
+                                </span>
+                                <p className="font-display mt-4 text-lg text-foreground">{t('dash.no_projects_title')}</p>
+                                <p className="mt-1 text-[13px] text-muted-foreground">{t('dash.no_projects_desc')}</p>
+                                <Button asChild size="sm" className="mt-5">
                                     <Link href="/projects/create">
                                         <Plus /> {t('dash.create_first')}
                                     </Link>
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                                 {recentProjects.map((p) => <ProjectCard key={p.id} project={p} />)}
                             </div>
                         )}

@@ -1,4 +1,5 @@
 import '@fontsource-variable/inter';
+import '@fontsource-variable/newsreader';
 import { createInertiaApp } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,10 +21,10 @@ const queryClient = new QueryClient({
     },
 });
 
-const appName = import.meta.env.VITE_APP_NAME || 'UCSM Project Catalog';
+const appName = import.meta.env.VITE_APP_NAME || 'UCSMGY Project Catalog';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — ${appName}` : appName),
+    title: (title) => (title ? `${title} · ${appName}` : appName),
     layout: (name) => {
         switch (true) {
             case name === 'welcome':
@@ -48,7 +49,7 @@ createInertiaApp({
         );
     },
     progress: {
-        color: '#c15f3c',
+        color: '#b08a4f',
     },
 });
 

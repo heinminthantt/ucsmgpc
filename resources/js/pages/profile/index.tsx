@@ -10,7 +10,7 @@ import {
 import { useMe, useUserProjects } from '@/hooks/useCatalog';
 import api from '@/lib/api';
 
-const sectionClass = 'rounded-xl border border-stone-200 bg-white p-5 sm:p-6 space-y-5';
+const sectionClass = 'rounded-xl border border-border bg-card p-5 sm:p-6 space-y-5';
 
 export default function ProfilePage() {
     const qc = useQueryClient();
@@ -64,7 +64,7 @@ export default function ProfilePage() {
     if (!me) {
 return (
         <div className="flex h-64 items-center justify-center">
-            <Icon icon="mdi:loading" className="animate-spin text-3xl text-stone-400" />
+            <Icon icon="mdi:loading" className="animate-spin text-3xl text-muted-foreground/70" />
         </div>
     );
 }
@@ -73,18 +73,18 @@ return (
         <>
             <Head title="Profile" />
 
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="space-y-6">
-                    <header className="space-y-1">
-                        <h1 className="text-xl font-semibold text-stone-900">{me.name}</h1>
-                        <p className="max-w-xl text-sm text-stone-500">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="space-y-8">
+                    <header>
+                        <h1 className="text-3xl font-semibold text-foreground">{me.name}</h1>
+                        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
                             Your account details, password, and the projects you have added to the catalog.
                         </p>
                     </header>
 
                     <section className={sectionClass}>
                         <div className="flex items-center justify-between gap-3">
-                            <h2 className="text-sm font-medium text-stone-900">Profile details</h2>
+                            <h2 className="text-sm font-medium text-foreground">Profile details</h2>
                             {!editing && (
                                 <Button variant="outline" size="sm" onClick={startEdit}>
                                     Edit profile
@@ -93,9 +93,9 @@ return (
                         </div>
 
                         <div className="flex flex-col items-start gap-6 md:flex-row">
-                            <div className="flex w-full shrink-0 flex-col items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 p-5 text-center md:w-52">
+                            <div className="flex w-full shrink-0 flex-col items-center gap-3 rounded-lg border border-border bg-muted/40 p-5 text-center md:w-52">
                                 <Avatar size="lg" className="size-20">
-                                    <AvatarFallback className="bg-stone-200 text-2xl font-medium text-stone-700">
+                                    <AvatarFallback className="bg-muted text-2xl font-medium text-foreground/85">
                                         {me.name[0].toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
@@ -115,16 +115,16 @@ return (
                                             <div className="space-y-1.5">
                                                 <Label>Email address</Label>
                                                 <Input value={me.email} disabled className="opacity-60" />
-                                                <p className="text-[13px] text-stone-500">Your email address cannot be changed.</p>
+                                                <p className="text-[13px] text-muted-foreground">Your email address cannot be changed.</p>
                                             </div>
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label>Bio</Label>
-                                            <textarea rows={4} className="w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                            <textarea rows={4} className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border"
                                                 placeholder="Share a short summary about your background and work..."
                                                 value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} />
                                         </div>
-                                        <div className="flex gap-2 border-t border-stone-100 pt-4">
+                                        <div className="flex gap-2 border-t border-border/70 pt-4">
                                             <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
                                             <Button onClick={() => updateMutation.mutate({ name: form.name, bio: form.bio, avatar_url: form.avatar_url })}
                                                 disabled={updateMutation.isPending}>
@@ -135,24 +135,24 @@ return (
                                 ) : (
                                     <div className="space-y-5">
                                         <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="rounded-lg border border-stone-200 px-4 py-3">
-                                                <p className="text-xs text-stone-400">Name</p>
-                                                <p className="mt-1 text-sm font-medium text-stone-900">{me.name}</p>
+                                            <div className="rounded-lg border border-border px-4 py-3">
+                                                <p className="text-xs text-muted-foreground/70">Name</p>
+                                                <p className="mt-1 text-sm font-medium text-foreground">{me.name}</p>
                                             </div>
-                                            <div className="rounded-lg border border-stone-200 px-4 py-3">
-                                                <p className="text-xs text-stone-400">Email</p>
-                                                <p className="mt-1 text-sm font-medium text-stone-900">{me.email}</p>
+                                            <div className="rounded-lg border border-border px-4 py-3">
+                                                <p className="text-xs text-muted-foreground/70">Email</p>
+                                                <p className="mt-1 text-sm font-medium text-foreground">{me.email}</p>
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="mb-1.5 text-xs text-stone-400">Bio</p>
+                                            <p className="mb-1.5 text-xs text-muted-foreground/70">Bio</p>
                                             {me.bio ? (
-                                                <p className="whitespace-pre-line text-sm leading-relaxed text-stone-600">
+                                                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                                                     {me.bio}
                                                 </p>
                                             ) : (
-                                                <p className="text-sm text-stone-500">
-                                                    No bio yet. Click edit profile to add one.
+                                                <p className="text-sm text-muted-foreground">
+                                                    No bio yet. Use Edit profile to add one.
                                                 </p>
                                             )}
                                         </div>
@@ -168,17 +168,17 @@ return (
                             { label: 'Role', value: me.role },
                             { label: 'Status', value: 'Active' },
                         ].map((s) => (
-                            <div key={s.label} className="rounded-xl border border-stone-200 bg-white px-4 py-4">
-                                <p className="text-xs text-stone-400">{s.label}</p>
-                                <p className="mt-1 truncate text-lg font-semibold text-stone-900">{s.value}</p>
+                            <div key={s.label} className="rounded-xl border border-border bg-card px-4 py-4">
+                                <p className="text-xs text-muted-foreground/70">{s.label}</p>
+                                <p className="mt-1 truncate text-lg font-semibold text-foreground">{s.value}</p>
                             </div>
                         ))}
                     </div>
 
                     <section className={sectionClass}>
                         <div className="space-y-1">
-                            <h2 className="text-sm font-medium text-stone-900">Password</h2>
-                            <p className="text-[13px] text-stone-500">Change your account password.</p>
+                            <h2 className="text-sm font-medium text-foreground">Password</h2>
+                            <p className="text-[13px] text-muted-foreground">Change your account password.</p>
                         </div>
                         <form onSubmit={handleChangePassword} className="max-w-2xl space-y-5">
                             <div className="grid gap-4 sm:grid-cols-3">
@@ -194,7 +194,7 @@ return (
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex justify-end border-t border-stone-100 pt-4">
+                            <div className="flex justify-end border-t border-border/70 pt-4">
                                 <Button type="submit" disabled={pwLoading} size="sm">
                                     {pwLoading ? 'Updating...' : 'Update password'}
                                 </Button>
@@ -203,16 +203,16 @@ return (
                     </section>
 
                     <section className={sectionClass}>
-                        <h2 className="text-sm font-medium text-stone-900">My projects ({myProjects?.length ?? 0})</h2>
+                        <h2 className="text-sm font-medium text-foreground">My projects ({myProjects?.length ?? 0})</h2>
                         {projectsLoading ? (
                             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-60 animate-pulse rounded-xl border border-stone-200 bg-stone-50" />)}
+                                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-60 animate-pulse rounded-xl border border-border bg-muted/40" />)}
                             </div>
                         ) : !myProjects?.length ? (
-                            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-stone-300 px-6 py-12 text-center">
-                                <Icon icon="mdi:folder-outline" className="text-4xl text-stone-300" />
-                                <p className="text-sm font-medium text-stone-900">No projects yet</p>
-                                <p className="text-[13px] text-stone-500">You have not added any projects to the catalog yet.</p>
+                            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-6 py-12 text-center">
+                                <Icon icon="mdi:folder-outline" className="text-4xl text-muted-foreground/45" />
+                                <p className="text-sm font-medium text-foreground">No projects yet</p>
+                                <p className="text-[13px] text-muted-foreground">You have not added any projects to the catalog yet.</p>
                                 <a href="/projects/create">
                                     <Button size="sm">Create project</Button>
                                 </a>

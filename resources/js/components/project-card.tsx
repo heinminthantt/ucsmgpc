@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight, Building2, Calendar, GraduationCap, Heart, UserRoundCheck } from 'lucide-react';
 import { Badge } from '@/components/ui';
+import { useT } from '@/i18n';
 import type { Project } from '@/types/catalog';
 
 interface Props {
@@ -14,6 +15,7 @@ const statusConfig = {
 };
 
 export function ProjectCard({ project }: Props) {
+    const t = useT();
     const status = statusConfig[project.approvalStatus] ?? statusConfig.PENDING;
 
     return (
@@ -27,6 +29,11 @@ export function ProjectCard({ project }: Props) {
                 <Badge variant={status.variant} className="absolute top-2 right-2 bg-white/90">
                     {status.label}
                 </Badge>
+                {project.isFeatured && (
+                    <Badge className="absolute top-2 left-2 bg-[#C15F3C] text-white hover:bg-[#C15F3C]">
+                        {t('card.featured')}
+                    </Badge>
+                )}
             </div>
 
             <div className="flex flex-1 flex-col p-4">
@@ -53,6 +60,12 @@ export function ProjectCard({ project }: Props) {
                 </p>
 
                 <div className="mb-3 space-y-1 border-t border-stone-100 pt-3">
+                    {project.publishedAt && (
+                        <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+                            <Calendar className="h-3.5 w-3.5 shrink-0 text-stone-400" />
+                            {t('card.published')} {new Date(project.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Yangon' })}
+                        </div>
+                    )}
                     {project.academic_year && (
                         <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
                             <Calendar className="h-3.5 w-3.5 shrink-0 text-stone-400" />
@@ -89,13 +102,13 @@ export function ProjectCard({ project }: Props) {
                 <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-3">
                     <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
                         <Heart className="h-3.5 w-3.5" />
-                        {project.reactionCount ?? 0} likes
+                        {project.reactionCount ?? 0} {t('card.likes')}
                     </div>
                     <Link
                         href={`/projects/${project.id}/view`}
                         className="flex items-center gap-1 text-[13px] font-medium text-stone-700 hover:text-stone-900"
                     >
-                        View details <ArrowRight className="h-3.5 w-3.5" />
+                        {t('card.view_details')} <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                 </div>
             </div>

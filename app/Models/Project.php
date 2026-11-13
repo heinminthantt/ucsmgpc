@@ -24,6 +24,8 @@ class Project extends Model
         'student_year',
         'objectives',
         'github_link',
+        'demo_video_url',
+        'github_verified_at',
         'members_json',
         'user_id',
         'department_id',
@@ -38,12 +40,15 @@ class Project extends Model
         'status',
         'published_at',
         'evaluation_conflict',
+        'is_featured',
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
+        'github_verified_at' => 'datetime',
         'evaluation_conflict' => 'boolean',
+        'is_featured' => 'boolean',
     ];
 
     protected static function booted(): void

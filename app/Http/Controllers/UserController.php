@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,14 +22,61 @@ class UserController extends Controller
     public function me(): JsonResponse
     {
         $user = Auth::user();
+
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
             'bio' => $user->bio,
+            'locale' => $user->locale ?? 'en',
             'role' => strtoupper($user->role),
             'is_active' => $user->is_active,
+        ]);
+    }
+
+    /** PATCH /api/me/locale { locale: 'en' | 'my' } (Phase 3, spec D10). */
+    public function updateLocale(Request $request): JsonResponse
+    {
+        $validated = $request->validate(['locale' => 'required|in:en,my']);
+        Auth::user()->update(['locale' => $validated['locale']]);
+
+        return response()->json(['locale' => $validated['locale']]);
+    }
+
+    /**
+     * Public supervisor page (Phase 3, S7). Only supervisor accounts have
+     * one (404 for anyone else). Shows published supervised work only;
+     * never roll numbers, emails, marks or unpublished projects.
+     */
+    public function publicSupervisorPage(User $user): Response
+    {
+        if (! $user->isSupervisor() || ! $user->is_active) {
+            abort(404);
+        }
+
+        $user->load('department:id,name');
+        $formatter = app(ProjectController::class);
+
+        $projects = Project::approved()
+            ->where('supervisor_id', $user->id)
+            ->with(['user', 'department', 'course', 'supervisor', 'tags', 'files', 'cycle:id,semester'])
+            ->withCount('reactions')
+            ->orderByDesc('is_featured')
+            ->latest('published_at')
+            ->get();
+
+        return Inertia::render('supervisors/show', [
+            'supervisor' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'bio' => $user->bio,
+                'avatarUrl' => $user->avatar_url,
+                'departmentId' => $user->department_id,
+                'departmentName' => $user->department?->name,
+            ],
+            'counts' => ['publishedProjects' => $projects->count()],
+            'projects' => $projects->map(fn ($p) => $formatter->formatProjectPublic($p))->values(),
         ]);
     }
 
@@ -46,7 +94,9 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): JsonResponse
     {
-        if ($user->id !== Auth::id() && !Auth::user()->isAdmin()) abort(403);
+        if ($user->id !== Auth::id() && ! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:100',
@@ -55,6 +105,7 @@ class UserController extends Controller
         ]);
 
         $user->update($validated);
+
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
@@ -67,18 +118,21 @@ class UserController extends Controller
 
     public function changePassword(Request $request, User $user): JsonResponse
     {
-        if ($user->id !== Auth::id()) abort(403);
+        if ($user->id !== Auth::id()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'oldPassword' => 'required|string',
             'newPassword' => 'required|string|min:8',
         ]);
 
-        if (!Hash::check($validated['oldPassword'], $user->password)) {
+        if (! Hash::check($validated['oldPassword'], $user->password)) {
             return response()->json(['message' => 'Current password is incorrect'], 422);
         }
 
         $user->update(['password' => Hash::make($validated['newPassword'])]);
+
         return response()->json(['message' => 'Password changed successfully']);
     }
 
@@ -86,13 +140,17 @@ class UserController extends Controller
     {
         $request->validate(['image' => 'required|image|max:2048']);
         $path = $request->file('image')->store('avatars', 'public');
+
         return response()->json(['url' => Storage::url($path)]);
     }
 
     public function destroy(User $user): JsonResponse
     {
-        if (!Auth::user()->isAdmin() && $user->id !== Auth::id()) abort(403);
+        if (! Auth::user()->isAdmin() && $user->id !== Auth::id()) {
+            abort(403);
+        }
         $user->update(['is_active' => false]);
+
         return response()->json(['message' => 'User deactivated']);
     }
 }

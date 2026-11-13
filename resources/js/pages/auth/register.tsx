@@ -4,6 +4,7 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button, Input, Label, Spinner } from '@/components/ui';
+import { useT } from '@/i18n';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export default function Register({ passwordRules }: Props) {
+    const t = useT();
+
     return (
         <>
             <Head title="Create account" />
@@ -26,7 +29,7 @@ export default function Register({ passwordRules }: Props) {
                     <>
                         <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Full Name</Label>
+                                <Label htmlFor="name">{t('auth.full_name')}</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -43,7 +46,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">{t('auth.email')}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -59,7 +62,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">{t('auth.password')}</Label>
                                 <PasswordInput
                                     id="password"
                                     name="password"
@@ -77,7 +80,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">Confirm Password</Label>
+                                <Label htmlFor="password_confirmation">{t('auth.confirm_password')}</Label>
                                 <PasswordInput
                                     id="password_confirmation"
                                     name="password_confirmation"
@@ -99,7 +102,7 @@ export default function Register({ passwordRules }: Props) {
                                 data-test="register-user-button"
                             >
                                 {processing ? <Spinner /> : <Icon icon="mdi:account-plus-outline" className="text-base" />}
-                                {processing ? 'Creating account…' : 'Create account'}
+                                {processing ? 'Creating account…' : t('auth.register')}
                             </Button>
                         </div>
 

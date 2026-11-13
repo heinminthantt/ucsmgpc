@@ -7,7 +7,10 @@ use App\Models\ProjectFile;
 use App\Models\Review;
 use App\Models\Submission;
 use App\Models\User;
+use App\Rules\DemoVideoUrlRule;
+use App\Rules\GitHubLink;
 use App\Services\EvaluationService;
+use App\Services\GitHubLinkChecker;
 use App\Services\ProjectLifecycle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,7 +46,12 @@ class SubmissionController extends Controller
             'objectives' => 'sometimes|string',
             'benefits' => 'nullable|string',
             'body' => 'nullable|string',
-            'github_link' => 'nullable|url',
+            // Draft saves check the GitHub format only: a draft is work in
+            // progress, so the reachability verdict must not block it
+            // (Phase 3). Reachability is enforced on create/update and on
+            // stage submission when the link is submitted.
+            'github_link' => ['nullable', 'url', new GitHubLink],
+            'demo_video_url' => ['nullable', 'string', 'max:500', new DemoVideoUrlRule],
             'supervisor_id' => 'nullable|exists:users,id',
             'course_id' => 'nullable|exists:courses,id',
             'payload' => 'nullable|array',
@@ -78,7 +86,8 @@ class SubmissionController extends Controller
             'objectives' => 'sometimes|string',
             'benefits' => 'nullable|string',
             'body' => 'nullable|string',
-            'github_link' => 'nullable|url',
+            'github_link' => ['nullable', 'url', new GitHubLink],
+            'demo_video_url' => ['nullable', 'string', 'max:500', new DemoVideoUrlRule],
             'supervisor_id' => 'nullable|exists:users,id',
             'course_id' => 'nullable|exists:courses,id',
             'payload' => 'nullable|array',
@@ -89,6 +98,14 @@ class SubmissionController extends Controller
         $stage = (string) $validated['stage'];
 
         $draftFields = Arr::except($validated, ['stage', 'payload', 'project_files', 'file_kind']);
+        if (array_key_exists('github_link', $draftFields)) {
+            // Phase 3: a stage submission that carries a GitHub link runs
+            // the reachability check (confirmed 404 blocks; a network
+            // failure does not). A submission without the field does not
+            // re-check the stored link.
+            $draftFields['github_verified_at'] = app(GitHubLinkChecker::class)
+                ->verifiedAtFor($draftFields['github_link'], $project->github_link, $project->github_verified_at);
+        }
         if ($draftFields) {
             $project->update($draftFields);
             $project->refresh();
@@ -509,6 +526,7 @@ class SubmissionController extends Controller
             'benefits' => $project->benefits,
             'body' => $project->body,
             'github_link' => $project->github_link,
+            'demo_video_url' => $project->demo_video_url,
             'department_id' => $project->department_id,
             'course_id' => $project->course_id,
             'supervisor_id' => $project->supervisor_id,

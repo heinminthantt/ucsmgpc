@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -14,6 +15,9 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                     {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
                 </div>
                 <div className="rounded-xl border border-border bg-card px-6 py-6">{children}</div>
+                <div className="mt-4 text-center">
+                    <LanguageSwitcher />
+                </div>
             </div>
         </div>
     );

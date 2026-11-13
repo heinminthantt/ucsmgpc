@@ -1,10 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { ArrowLeft, Bookmark, FileDown, Github, Heart, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Bookmark, FileDown, Github, Heart, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge, Button } from '@/components/ui';
 import { useMe, useReactionStatus, useSavedStatus, useComments } from '@/hooks/useCatalog';
+import { useT } from '@/i18n';
 import api from '@/lib/api';
 import type { Project, Comment } from '@/types/catalog';
 import 'react-quill-new/dist/quill.snow.css';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function ProjectShow({ project }: Props) {
+    const t = useT();
     const qc = useQueryClient();
     const { data: me } = useMe();
     const { data: reactionData, refetch: refetchReaction } = useReactionStatus(project.id);
@@ -45,6 +47,12 @@ export default function ProjectShow({ project }: Props) {
         },
     });
 
+    const featureMutation = useMutation({
+        mutationFn: (featured: boolean) => api.post(`/projects/${project.id}/feature`, { is_featured: featured }),
+        onSuccess: () => window.location.reload(),
+    });
+    const canFeature = me && (me.role === 'ADMIN' || me.role === 'DEPARTMENT_ADMIN');
+
     const deleteCommentMutation = useMutation({
         mutationFn: (id: number) => api.delete(`/comments/${id}`),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['comments', project.id] }),
@@ -55,12 +63,16 @@ export default function ProjectShow({ project }: Props) {
             <Head title={project.title} />
             <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
                 <Link href="/projects" className="mb-6 inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900">
-                    <ArrowLeft className="h-4 w-4" /> Back to projects
+                    <ArrowLeft className="h-4 w-4" /> {t('show.back')}
                 </Link>
 
                 <header className="mb-8">
                     {project.departmentName && (
-                        <p className="mb-2 text-[13px] text-stone-500">{project.departmentName}</p>
+                        <p className="mb-2 text-[13px] text-stone-500">
+                            {project.departmentId ? (
+                                <Link href={`/departments/${project.departmentId}`} className="hover:text-stone-900 hover:underline">{project.departmentName}</Link>
+                            ) : project.departmentName}
+                        </p>
                     )}
                     <h1 className="text-2xl leading-tight font-semibold text-stone-900 sm:text-3xl">
                         {project.title}
@@ -72,6 +84,12 @@ export default function ProjectShow({ project }: Props) {
                     )}
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-stone-500">
                         <Badge variant="secondary" className="font-normal">{project.approvalStatus}</Badge>
+                        {project.isFeatured && (
+                            <Badge className="bg-[#C15F3C] font-normal text-white hover:bg-[#C15F3C]">{t('card.featured')}</Badge>
+                        )}
+                        {project.publishedAt && (
+                            <span>{t('card.published')} {format(new Date(project.publishedAt), 'MMM d, yyyy')}</span>
+                        )}
                         {(project.courseCode || project.courseName) && (
                             <span>{project.courseCode || project.courseName}</span>
                         )}
@@ -83,12 +101,16 @@ export default function ProjectShow({ project }: Props) {
                     <article className="space-y-8 lg:col-span-2">
                         <div className="flex flex-wrap gap-8 rounded-xl border border-stone-200 bg-white p-5">
                             <div>
-                                <p className="text-[13px] text-stone-500">Supervisor</p>
-                                <p className="mt-0.5 text-sm font-medium text-stone-900">{project.supervisorName || 'Unassigned'}</p>
+                                <p className="text-[13px] text-stone-500">{t('show.supervisor')}</p>
+                                <p className="mt-0.5 text-sm font-medium text-stone-900">
+                                    {project.supervisorName && project.supervisorId ? (
+                                        <Link href={`/supervisors/${project.supervisorId}`} className="hover:underline">{project.supervisorName}</Link>
+                                    ) : (project.supervisorName || t('show.unassigned'))}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-[13px] text-stone-500">Submitted by</p>
-                                <p className="mt-0.5 text-sm font-medium text-stone-900">{project.submittedByName || 'Unknown'}</p>
+                                <p className="text-[13px] text-stone-500">{t('show.submitted_by')}</p>
+                                <p className="mt-0.5 text-sm font-medium text-stone-900">{project.submittedByName || t('show.unknown')}</p>
                             </div>
                         </div>
 
@@ -96,13 +118,13 @@ export default function ProjectShow({ project }: Props) {
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {project.objectives && (
                                     <div>
-                                        <h2 className="mb-2 text-sm font-medium text-stone-900">Objectives</h2>
+                                        <h2 className="mb-2 text-sm font-medium text-stone-900">{t('show.objectives')}</h2>
                                         <p className="text-sm leading-relaxed text-stone-600">{project.objectives}</p>
                                     </div>
                                 )}
                                 {project.benefits && (
                                     <div>
-                                        <h2 className="mb-2 text-sm font-medium text-stone-900">Benefits</h2>
+                                        <h2 className="mb-2 text-sm font-medium text-stone-900">{t('show.benefits')}</h2>
                                         <p className="text-sm leading-relaxed text-stone-600">{project.benefits}</p>
                                     </div>
                                 )}
@@ -111,11 +133,25 @@ export default function ProjectShow({ project }: Props) {
 
                         {project.body && (
                             <div>
-                                <h2 className="mb-3 text-base font-medium text-stone-900">Detailed report</h2>
+                                <h2 className="mb-3 text-base font-medium text-stone-900">{t('show.report')}</h2>
                                 <div
                                     className="ql-editor max-w-none p-0 text-sm leading-relaxed text-stone-700"
                                     dangerouslySetInnerHTML={{ __html: project.body }}
                                 />
+                            </div>
+                        )}
+                        {project.demoVideoEmbedUrl && (
+                            <div>
+                                <h2 className="mb-3 text-base font-medium text-stone-900">{t('show.demo_video')}</h2>
+                                <div className="aspect-video overflow-hidden rounded-xl border border-stone-200 bg-black">
+                                    <iframe
+                                        src={project.demoVideoEmbedUrl}
+                                        title={t('show.demo_video')}
+                                        className="h-full w-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
                             </div>
                         )}
                     </article>
@@ -123,7 +159,7 @@ export default function ProjectShow({ project }: Props) {
                     <aside className="flex flex-col gap-4">
                         {me && (
                             <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-4 text-sm font-medium text-stone-900">Actions</h2>
+                                <h2 className="mb-4 text-sm font-medium text-stone-900">{t('show.actions')}</h2>
                                 <div className="flex flex-wrap gap-2">
                                     <Button
                                         variant={reactionData?.reacted ? 'default' : 'outline'}
@@ -159,12 +195,24 @@ export default function ProjectShow({ project }: Props) {
                                         <Link href={`/projects/${project.id}/edit`}>Edit report</Link>
                                     </Button>
                                 )}
+
+                                {canFeature && !!project.publishedAt && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-3 w-full"
+                                        disabled={featureMutation.isPending}
+                                        onClick={() => featureMutation.mutate(!project.isFeatured)}
+                                    >
+                                        {project.isFeatured ? 'Remove featured' : 'Mark as featured'}
+                                    </Button>
+                                )}
                             </div>
                         )}
 
                         {members.length > 0 && (
                             <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">Team members</h2>
+                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.team_members')}</h2>
                                 <ul className="divide-y divide-stone-100">
                                     {members.map((m, i) => (
                                         <li key={i} className="flex items-center justify-between py-2 text-sm first:pt-0 last:pb-0">
@@ -178,7 +226,7 @@ export default function ProjectShow({ project }: Props) {
 
                         {project.tags?.length > 0 && (
                             <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">Tags</h2>
+                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.tags')}</h2>
                                 <div className="flex flex-wrap gap-1.5">
                                     {project.tags.map((t) => (
                                         <Badge key={t} variant="secondary" className="font-normal">
@@ -191,14 +239,19 @@ export default function ProjectShow({ project }: Props) {
 
                         {(project.githubLink || project.projectFiles?.length > 0) && (
                             <div className="rounded-xl border border-stone-200 bg-white p-5">
-                                <h2 className="mb-3 text-sm font-medium text-stone-900">Links and files</h2>
+                                <h2 className="mb-3 text-sm font-medium text-stone-900">{t('show.links_files')}</h2>
                                 <div className="space-y-2">
                                     {project.githubLink && (
                                         <a href={project.githubLink} target="_blank" rel="noopener noreferrer"
                                             className="flex items-center justify-between text-sm text-stone-700 hover:text-stone-900">
-                                            <span>Source code</span>
+                                            <span>{t('show.source_code')}</span>
                                             <Github className="h-4 w-4 text-stone-400" />
                                         </a>
+                                    )}
+                                    {project.githubLink && project.githubVerifiedAt && (
+                                        <p className="flex items-center gap-1.5 text-[13px] text-emerald-700">
+                                            <BadgeCheck className="h-4 w-4" /> {t('show.github_verified')}
+                                        </p>
                                     )}
                                     {project.projectFiles?.length > 0 && (
                                         <div className="space-y-2 border-t border-stone-100 pt-2">
@@ -219,7 +272,7 @@ export default function ProjectShow({ project }: Props) {
 
                 {me && (
                     <section className="mt-10 border-t border-stone-200 pt-8">
-                        <h2 className="mb-1 text-base font-medium text-stone-900">Comments</h2>
+                        <h2 className="mb-1 text-base font-medium text-stone-900">{t('show.comments')}</h2>
                         <p className="mb-6 text-[13px] text-stone-500">Share feedback on this project.</p>
 
                         <div className="max-w-3xl space-y-8">

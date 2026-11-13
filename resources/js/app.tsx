@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { LocaleProvider } from '@/i18n';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -40,7 +41,7 @@ createInertiaApp({
         return (
             <QueryClientProvider client={queryClient}>
                 <TooltipProvider delayDuration={0}>
-                    {app}
+                    <LocaleProvider>{app}</LocaleProvider>
                     <Toaster richColors position="top-right" />
                 </TooltipProvider>
             </QueryClientProvider>

@@ -30,6 +30,16 @@ export interface Project {
     excerpt?: string;
     contentFormat?: string;
     githubLink?: string;
+    githubVerifiedAt?: string;
+    demoVideoUrl?: string;
+    demoVideoEmbedUrl?: string;
+    isFeatured?: boolean;
+    semester?: string;
+    status?: string;
+    cycleId?: number;
+    teamId?: number;
+    examinerId?: number;
+    publishedAt?: string;
     coverImageUrl?: string;
     academic_year?: string;
     student_year?: string;
@@ -88,6 +98,7 @@ export interface Filters {
     courseId: string;
     academicYear: string;
     studentYear: string;
+    semester: string;
     tags: string;
     supervisor: string;
     members: string;

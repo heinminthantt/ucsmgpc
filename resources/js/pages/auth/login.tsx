@@ -6,6 +6,7 @@ import PasskeyVerify from '@/components/passkey-verify';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button, Checkbox, Input, Label, Spinner } from '@/components/ui';
+import { useT } from '@/i18n';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const t = useT();
     const [remember, setRemember] = useState(false);
 
     return (
@@ -42,7 +44,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
                         <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">{t('auth.email')}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -61,14 +63,14 @@ export default function Login({ status, canResetPassword }: Props) {
 
                             <div className="grid gap-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">{t('auth.password')}</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="text-xs italic text-muted-foreground hover:text-primary transition-colors"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            {t('auth.forgot')}
                                         </TextLink>
                                     )}
                                 </div>
@@ -104,7 +106,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                 disabled={processing}
                             >
                                 {processing ? <Spinner /> : <Icon icon="mdi:login-variant" className="text-base" />}
-                                {processing ? 'Signing in…' : 'Log in'}
+                                {processing ? 'Signing in…' : t('auth.log_in')}
                             </Button>
                         </div>
 

@@ -181,6 +181,119 @@ class AcademicCycleController extends Controller
     }
 
     /**
+     * Department analytics (Phase 3, spec 2.3): per-cycle outcome numbers
+     * for the department office. JSON only; the department page renders a
+     * simple section from it.
+     * GET /api/department/analytics?cycle_id=&department_id=
+     * Dept admins are scoped to their own department; admins may pass
+     * department_id. Without cycle_id the department's latest cycle is used.
+     */
+    public function analytics(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user->isAdmin() && ! $user->isDepartmentAdmin()) {
+            abort(403);
+        }
+
+        $departmentId = $user->isAdmin() && $request->filled('department_id')
+            ? $request->integer('department_id')
+            : (int) $user->department_id;
+
+        $cycle = null;
+        if ($request->filled('cycle_id')) {
+            $cycle = AcademicCycle::find($request->integer('cycle_id'));
+            if (! $cycle || (! $user->isAdmin() && (int) $cycle->department_id !== $departmentId)) {
+                abort(404);
+            }
+        } elseif ($departmentId) {
+            $cycle = AcademicCycle::where('department_id', $departmentId)->latest('id')->first();
+        }
+
+        $query = Project::query();
+        if ($cycle) {
+            $query->where('cycle_id', $cycle->id);
+        } elseif ($departmentId) {
+            $query->where('department_id', $departmentId);
+        }
+
+        $projects = $query->with(['supervisor:id,name', 'tags:id,name', 'submissions.reviews.scores'])->get();
+        $template = $cycle?->rubricTemplate ?? RubricTemplate::defaultTemplate();
+
+        $byStatus = [];
+        foreach ($projects->countBy('status') as $status => $n) {
+            $byStatus[$status] = $n;
+        }
+
+        $published = $projects->where('status', 'approved_published')->count();
+        $evaluated = $projects->whereIn('status', ['approved_published', 'not_passed', 'revision_required'])->count();
+        $passRate = $evaluated > 0 ? round($published / $evaluated * 100, 1) : null;
+
+        $totals = [];
+        $durations = [];
+        foreach ($projects as $project) {
+            if ($project->resultIsConfirmed()) {
+                $total = $this->confirmedTotal($project, $template);
+                if ($total !== null) {
+                    $totals[] = $total;
+                }
+            }
+            if ($project->status === 'approved_published' && $project->published_at) {
+                $firstProposal = $project->submissions->where('stage', 'proposal')->sortBy('id')->first();
+                if ($firstProposal) {
+                    $durations[] = $firstProposal->created_at->diffInDays($project->published_at);
+                }
+            }
+        }
+
+        $supervisorLoad = $projects->whereNotNull('supervisor_id')
+            ->groupBy('supervisor_id')
+            ->map(fn ($group) => [
+                'supervisorId' => $group->first()->supervisor_id,
+                'supervisorName' => $group->first()->supervisor?->name,
+                'projects' => $group->count(),
+            ])
+            ->sortByDesc('projects')
+            ->values();
+
+        $topTags = $projects->where('status', 'approved_published')
+            ->flatMap(fn ($p) => $p->tags->pluck('name'))
+            ->countBy()
+            ->sortDesc()
+            ->take(5)
+            ->map(fn ($n, $name) => ['tag' => $name, 'projects' => $n])
+            ->values();
+
+        return response()->json([
+            'cycleId' => $cycle?->id,
+            'cycleLabel' => $cycle ? "{$cycle->academic_year} · {$cycle->semester}" : null,
+            'totalProjects' => $projects->count(),
+            'byStatus' => $byStatus,
+            'passRate' => $passRate,
+            'evaluatedProjects' => $evaluated,
+            'averageRubricTotal' => $totals ? round(array_sum($totals) / count($totals), 2) : null,
+            'averageDaysProposalToPublished' => $durations ? round(array_sum($durations) / count($durations), 1) : null,
+            'supervisorLoad' => $supervisorLoad,
+            'topTags' => $topTags,
+        ]);
+    }
+
+    /** Weighted total of the confirming review for a project, or null. */
+    private function confirmedTotal(Project $project, RubricTemplate $template): ?float
+    {
+        $latestFinal = $project->submissions->where('stage', 'final')->sortByDesc('id')->first();
+        if (! $latestFinal) {
+            return null;
+        }
+        $reviews = $latestFinal->reviews;
+        $confirming = $reviews->first(fn ($r) => in_array($r->reviewer_role, ['dept_admin', 'admin'], true))
+            ?? $reviews->firstWhere('reviewer_id', (int) $project->examiner_id)
+            ?? $reviews->firstWhere('reviewer_id', (int) $project->supervisor_id)
+            ?? $reviews->first();
+
+        return $confirming ? $template->weightedTotal($confirming->scoresByKey()) : null;
+    }
+
+    /**
      * Cycle export (spec 6.9 / WF8): one row per project with team,
      * staff, version counts and the confirmed rubric outcome.
      * GET /api/cycles/{cycle}/export?format=csv|json
@@ -345,6 +458,7 @@ class AcademicCycleController extends Controller
             'mid_deadline' => $cycle->mid_deadline?->toISOString(),
             'final_deadline' => $cycle->final_deadline->toISOString(),
             'report_pdf_visibility' => $cycle->report_pdf_visibility,
+            'rubric_template_id' => $cycle->rubric_template_id,
             'status' => $cycle->status,
             'createdAt' => $cycle->created_at?->toISOString(),
         ];

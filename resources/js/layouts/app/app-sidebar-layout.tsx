@@ -14,7 +14,9 @@ import {
     UserRound,
 } from 'lucide-react';
 import { useState } from 'react';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { useMe, useUnreadCount } from '@/hooks/useCatalog';
+import { useT } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
 import type { AppLayoutProps } from '@/types';
@@ -25,6 +27,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
     const { data: user } = useMe();
     const { data: unread } = useUnreadCount();
     const page = usePage();
+    const t = useT();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const role = (user?.role ?? '').toString().toUpperCase();
@@ -33,23 +36,29 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
     const isDeptAdmin = role === 'DEPARTMENT_ADMIN' || role === 'ADMIN';
 
     const nav: NavEntry[] = [
-        { label: 'Projects', href: '/projects', icon: FolderOpen },
+        { label: t('nav.projects'), href: '/projects', icon: FolderOpen },
         ...(user
             ? [
-                  { label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
-                  { label: 'My project', href: '/projects/my', icon: FileText },
-                  { label: 'New project', href: '/projects/create', icon: Plus },
-                  { label: 'Saved', href: '/saved-projects', icon: Bookmark },
+                  { label: t('nav.dashboard'), href: '/dashboard', icon: LayoutGrid },
+                  { label: t('nav.my_project'), href: '/projects/my', icon: FileText },
+                  { label: t('nav.new_project'), href: '/projects/create', icon: Plus },
+                  { label: t('nav.saved'), href: '/saved-projects', icon: Bookmark },
               ]
             : []),
         ...(isStaff
-            ? [{ label: 'Supervisor', href: '/supervisor-dashboard', icon: ClipboardCheck }]
+            ? [{ label: t('nav.supervisor'), href: '/supervisor-dashboard', icon: ClipboardCheck }]
+            : []),
+        ...(role === 'SUPERVISOR'
+            ? [{ label: t('nav.examiner'), href: '/examiner', icon: ClipboardCheck }]
             : []),
         ...(isDeptAdmin
-            ? [{ label: 'Department', href: '/department', icon: CalendarRange }]
+            ? [{ label: t('nav.department'), href: '/department', icon: CalendarRange }]
+            : []),
+        ...(isDeptAdmin
+            ? [{ label: t('nav.audit_log'), href: '/audit-log', icon: FileText }]
             : []),
         ...(isAdmin
-            ? [{ label: 'Admin', href: '/admin-dashboard', icon: ShieldCheck }]
+            ? [{ label: t('nav.admin'), href: '/admin-dashboard', icon: ShieldCheck }]
             : []),
     ];
 
@@ -86,7 +95,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                         className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/60 dark:hover:text-stone-50"
                     >
                         <Bell className="size-4 shrink-0" />
-                        Notifications
+                        {t('nav.notifications')}
                         {(unread?.count ?? 0) > 0 && (
                             <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
                                 {unread!.count > 9 ? '9+' : unread!.count}
@@ -98,14 +107,14 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                         className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/60 dark:hover:text-stone-50"
                     >
                         <UserRound className="size-4 shrink-0" />
-                        Profile
+                        {t('nav.profile')}
                     </Link>
                     <Link
                         href="/settings/profile"
                         className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/60 dark:hover:text-stone-50"
                     >
                         <Settings className="size-4 shrink-0" />
-                        Settings
+                        {t('nav.settings')}
                     </Link>
                     <div className="mt-2 flex items-center gap-2.5 px-2.5">
                         <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-stone-200 text-xs font-medium text-stone-700 dark:bg-stone-700 dark:text-stone-200">
@@ -132,16 +141,19 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                         href="/login"
                         className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-center text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
                     >
-                        Sign in
+                        {t('nav.sign_in')}
                     </Link>
                     <Link
                         href="/register"
                         className="flex-1 rounded-lg bg-primary px-3 py-1.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
-                        Register
+                        {t('nav.register')}
                     </Link>
                 </div>
             )}
+            <div className="px-2.5 pt-3">
+                <LanguageSwitcher />
+            </div>
         </div>
     );
 
@@ -151,7 +163,7 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
             <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-background px-3 py-4 md:flex">
                 <Link href="/" className="px-2.5 pb-4">
                     <span className="text-[15px] font-semibold text-stone-900 dark:text-stone-50">UCSM Project Catalog</span>
-                    <span className="block text-xs font-normal text-stone-500">University of Computer Studies, Magway</span>
+                    <span className="block text-xs font-normal text-stone-500">{t('app.tagline')}</span>
                 </Link>
                 <div className="flex-1 overflow-y-auto">{navList()}</div>
                 {userBlock}

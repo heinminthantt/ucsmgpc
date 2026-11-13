@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AcademicCycleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CohortImportController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DepartmentController;
@@ -8,7 +10,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\SavedProjectController;
+use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SupervisorController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -112,7 +116,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/projects', [AdminController::class, 'projects']);
             Route::put('/users/{user}/role', [AdminController::class, 'updateUserRole']);
             Route::delete('/users/{user}', [AdminController::class, 'deactivateUser']);
+
+            // Phase 1 aliases: cycles + cohort import are also available to
+            // system admins under /api/admin/* (the canonical department
+            // routes are in the role:department_admin group below).
+            Route::get('/cycles', [AcademicCycleController::class, 'index']);
+            Route::post('/cycles', [AcademicCycleController::class, 'store']);
+            Route::get('/cycles/{cycle}', [AcademicCycleController::class, 'show']);
+            Route::put('/cycles/{cycle}', [AcademicCycleController::class, 'update']);
+            Route::post('/cycles/{cycle}/close', [AcademicCycleController::class, 'close']);
+            Route::get('/import/template', [CohortImportController::class, 'template']);
+            Route::post('/import/preview', [CohortImportController::class, 'preview']);
+            Route::post('/import/confirm', [CohortImportController::class, 'confirm']);
         });
+
+        // ─── Phase 1: Academic cycles (Dept Admin; admins pass via EnsureRole) ───
+        Route::middleware('role:department_admin')->prefix('department')->group(function () {
+            Route::get('/cycles', [AcademicCycleController::class, 'index']);
+            Route::post('/cycles', [AcademicCycleController::class, 'store']);
+            Route::get('/cycles/{cycle}', [AcademicCycleController::class, 'show']);
+            Route::put('/cycles/{cycle}', [AcademicCycleController::class, 'update']);
+            Route::post('/cycles/{cycle}/close', [AcademicCycleController::class, 'close']);
+
+            // CSV cohort import (spec WF1)
+            Route::get('/import/template', [CohortImportController::class, 'template']);
+            Route::post('/import/preview', [CohortImportController::class, 'preview']);
+            Route::post('/import/confirm', [CohortImportController::class, 'confirm']);
+        });
+
+        // Cycles opened for students of the department
+        Route::get('/cycles/open', [AcademicCycleController::class, 'openCycles']);
+
+        // ─── Phase 1: Teams ──────────────────────────────────────────────────
+        Route::get('/teams/mine', [TeamController::class, 'mine']);
+        Route::post('/teams', [TeamController::class, 'store']);
+        Route::post('/teams/{team}/invite', [TeamController::class, 'invite']);
+        Route::get('/team-invites/mine', [TeamController::class, 'myInvites']);
+        Route::post('/team-invites/{invite}/confirm', [TeamController::class, 'confirmInvite']);
+        Route::post('/team-invites/{invite}/decline', [TeamController::class, 'declineInvite']);
+
+        // ─── Phase 1: Stage submissions and reviews ──────────────────────────
+        Route::put('/projects/{project}/draft', [SubmissionController::class, 'saveDraft']);
+        Route::post('/projects/{project}/submit', [SubmissionController::class, 'submit']);
+        Route::post('/projects/{project}/reopen', [SubmissionController::class, 'reopen']);
+        Route::get('/projects/{project}/submissions', [SubmissionController::class, 'index']);
+        Route::post('/submissions/{submission}/review', [SubmissionController::class, 'review']);
 
         // Supervisor
         Route::middleware('role:supervisor')->prefix('supervisor')->group(function () {

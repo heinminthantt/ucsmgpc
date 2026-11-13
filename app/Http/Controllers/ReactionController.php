@@ -27,6 +27,9 @@ class ReactionController extends Controller
         $request->validate(['project_id' => 'required|exists:projects,id']);
 
         $project = Project::findOrFail($request->project_id);
+        if (!$project->isPublished()) {
+            return response()->json(['message' => 'Reactions are only open on published projects.'], 422);
+        }
         $existing = Reaction::where('project_id', $project->id)
             ->where('user_id', Auth::id())
             ->first();

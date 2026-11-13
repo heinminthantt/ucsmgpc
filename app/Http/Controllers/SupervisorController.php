@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\ProjectNotification;
 use App\Services\ProjectLifecycle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,8 +12,6 @@ use Inertia\Response;
 
 class SupervisorController extends Controller
 {
-
-
     public function index(): Response
     {
         return Inertia::render('supervisor/dashboard');
@@ -33,7 +30,7 @@ class SupervisorController extends Controller
             })
             ->latest()
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'description' => $p->description,
@@ -54,13 +51,21 @@ class SupervisorController extends Controller
 
     public function approve(Project $project, ProjectLifecycle $lifecycle): JsonResponse
     {
-        if ($project->supervisor_id !== Auth::id() && !Auth::user()->isAdmin()) abort(403);
+        if ($project->supervisor_id !== Auth::id() && ! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         // Legacy endpoint, lifecycle-backed: "approve" advances the project
         // to its next approved state instead of writing approval_status
         // directly. The lifecycle service creates the owner notification.
         try {
             if ($lifecycle->canTransition($project, 'in_progress')) {
+                // Spec 6.4: approving a proposal counts against the
+                // supervisor's cycle capacity (admins override).
+                $block = $lifecycle->capacityBlockReason($project, Auth::user());
+                if ($block !== null) {
+                    return response()->json(['message' => $block], 422);
+                }
                 $lifecycle->transition($project, 'in_progress', Auth::user());
             } elseif ($project->status === 'final_submitted') {
                 $lifecycle->transition($project, 'under_evaluation', Auth::user());
@@ -85,7 +90,9 @@ class SupervisorController extends Controller
 
     public function reject(Request $request, Project $project, ProjectLifecycle $lifecycle): JsonResponse
     {
-        if ($project->supervisor_id !== Auth::id() && !Auth::user()->isAdmin()) abort(403);
+        if ($project->supervisor_id !== Auth::id() && ! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $validated = $request->validate(['reason' => 'required|string|max:1000']);
 

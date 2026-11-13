@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserInviteMail;
 use App\Models\Department;
 use App\Models\User;
+use App\Models\UserInvite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -25,10 +28,11 @@ use Illuminate\Support\Str;
  * Students CSV columns:    roll_number, name, email, department, student_year
  * Supervisors CSV columns: name, email, department, capacity (optional)
  *
- * Account state on import: is_active = true and a random unknown password.
- * There is no invite-mail flow in this foundation pass, so imported users
- * get in through the normal "forgot password" flow (or an admin-set
- * password). See PHASE1_PROGRESS.md.
+ * Account state on import: is_active = true, email_verified_at = null,
+ * and a random unknown password. Every imported user is issued an invite
+ * token (UserInvite, hashed, 7-day expiry) and queued an activation email
+ * (spec WF2); activation sets their real password, verifies the email and
+ * logs them in. See App\Http\Controllers\InviteActivationController.
  * Supervisor `capacity` is validated but not persisted: capacity lives on
  * the academic cycle in this data model (supervisor_capacity), not per user.
  */
@@ -74,10 +78,10 @@ class CohortImportController extends Controller
 
         $cohortYear = $request->input('cohort_year') ? (int) $request->input('cohort_year') : null;
 
-        $created = DB::transaction(function () use ($rows, $type, $cohortYear) {
-            $count = 0;
+        $createdUsers = DB::transaction(function () use ($rows, $type, $cohortYear) {
+            $users = [];
             foreach ($rows as $row) {
-                User::create([
+                $users[] = User::create([
                     'name' => $row['name'],
                     'email' => $row['email'],
                     'password' => Hash::make(Str::random(40)),
@@ -87,20 +91,35 @@ class CohortImportController extends Controller
                     'department_id' => $row['department_id'],
                     'student_year' => $row['student_year'] ?? null,
                     'cohort_year' => $type === 'students' ? $cohortYear : null,
-                    // Imported accounts are created from the university's own
-                    // class lists, so they count as verified.
-                    'email_verified_at' => now(),
+                    // Not verified yet: activation through the invite link
+                    // is what verifies the email (spec WF2).
+                    'email_verified_at' => null,
                 ]);
-                $count++;
             }
 
-            return $count;
+            return $users;
+        });
+
+        // Issue invite tokens inside their own transaction, then queue the
+        // activation emails (queued, so slow SMTP never blocks the import).
+        $invitesSent = 0;
+        DB::transaction(function () use ($createdUsers, &$invitesSent) {
+            foreach ($createdUsers as $user) {
+                [$invite, $plainToken] = UserInvite::issueFor($user);
+                Mail::to($user)->queue(new UserInviteMail(
+                    invitedUser: $user,
+                    activationUrl: route('invite.activate', $plainToken),
+                    expiresAt: $invite->expires_at,
+                ));
+                $invitesSent++;
+            }
         });
 
         return response()->json([
-            'message' => 'Import complete.',
+            'message' => 'Import complete. Invite emails were queued for the new accounts.',
             'type' => $type,
-            'created' => $created,
+            'created' => count($createdUsers),
+            'invites_sent' => $invitesSent,
         ], 201);
     }
 

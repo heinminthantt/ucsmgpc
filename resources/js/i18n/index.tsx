@@ -1,4 +1,3 @@
-import { usePage } from '@inertiajs/react';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import api from '@/lib/api';
@@ -41,14 +40,38 @@ function storedLocale(): Locale | null {
     return stored === 'my' || stored === 'en' ? stored : null;
 }
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-    const page = usePage();
-    const serverProp = (page.props as { locale?: string }).locale;
-    const serverLocale: Locale | null = serverProp === 'my' || serverProp === 'en' ? serverProp : null;
+/**
+ * The locale the server shared for the signed-in account. This provider is
+ * mounted OUTSIDE the Inertia context (it wraps the app in withApp), so it
+ * cannot use usePage(): doing so throws "usePage must be used within the
+ * Inertia component" and blanks every page. Instead, read the locale from
+ * the initial page payload Inertia embeds in the document on first load.
+ */
+function initialServerLocale(): Locale | null {
+    if (typeof document === 'undefined') {
+        return null;
+    }
 
+    try {
+        const raw = document.querySelector('script[data-page="app"]')?.textContent;
+
+        if (!raw) {
+            return null;
+        }
+
+        const locale = (JSON.parse(raw) as { props?: { locale?: string } }).props?.locale;
+
+        return locale === 'my' || locale === 'en' ? locale : null;
+    } catch {
+        return null;
+    }
+}
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
     // Priority: an explicit toggle in this session, then the account
     // preference shared by the server, then the guest localStorage value.
     const [override, setOverride] = useState<Locale | null>(null);
+    const [serverLocale] = useState<Locale | null>(() => initialServerLocale());
     const [stored] = useState<Locale | null>(() => storedLocale());
     const locale: Locale = override ?? serverLocale ?? stored ?? 'en';
 

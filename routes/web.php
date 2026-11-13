@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
     Route::get('/projects/{project}/view', [ProjectController::class, 'showPage'])->name('projects.show-page');
 
+    // Phase 1: My project (stage draft/submit + submission history)
+    Route::inertia('/projects/my', 'projects/my')->name('projects.my');
+
     // Saved Projects (page)
     Route::get('/saved-projects', [SavedProjectController::class, 'index'])->name('saved.index');
 
@@ -59,6 +62,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin Dashboard (page)
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    });
+
+    // Phase 1: Department page (cycles + CSV cohort import)
+    Route::middleware('role:department_admin')->group(function () {
+        Route::inertia('/department', 'department/index')->name('department.index');
     });
 
     // ─── Auth-protected API ───────────────────────────────────────────────────

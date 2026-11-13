@@ -1,53 +1,49 @@
-import { Head } from '@inertiajs/react';
-import { Icon } from '@iconify/react';
-import { Button, Heading, Text, OrnamentalDivider } from 'journal-ds';
-import { useSavedProjects } from '@/hooks/useCatalog';
+import { Head, Link } from '@inertiajs/react';
+import { Bookmark, Compass } from 'lucide-react';
 import { ProjectCard } from '@/components/project-card';
-import { Link } from '@inertiajs/react';
+import { Button, Skeleton } from '@/components/ui';
+import { useSavedProjects } from '@/hooks/useCatalog';
 
 export default function SavedProjects() {
     const { data: projects, isLoading } = useSavedProjects();
 
     return (
         <>
-            <Head title="Saved Projects" />
-            <div className="mx-auto max-w-5xl px-6 lg:px-8 py-12">
-                <header className="text-center space-y-3 mb-10 relative">
-                    <div className="absolute right-0 top-0 hidden md:block">
-                        <Link href="/projects">
-                            <Button variant="outline" size="sm" className="gap-2 font-serif text-journal-ink hover:text-journal-burgundy transition-colors">
-                                <Icon icon="mdi:compass-outline" />Browse more
-                            </Button>
-                        </Link>
+            <Head title="Saved projects" />
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+                <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-stone-900">Saved projects</h1>
+                        <p className="mt-1 text-sm text-stone-500">
+                            Projects you&apos;ve bookmarked for later reference.
+                        </p>
                     </div>
-                    <p className="journal-eyebrow">Personal Archive &middot; Reading List</p>
-                    <Heading level="h1" className="font-display text-4xl tracking-tight text-journal-ink">
-                        Saved Projects
-                    </Heading>
-                    <Text variant="muted" italic className="font-serif text-base max-w-xl mx-auto">
-                        A curated collection of projects you've bookmarked for later reference.
-                    </Text>
+                    <Button asChild variant="outline" size="sm">
+                        <Link href="/projects">
+                            <Compass /> Browse more
+                        </Link>
+                    </Button>
                 </header>
 
-                <OrnamentalDivider variant="simple" className="mb-8" />
-
                 {isLoading ? (
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="h-72 rounded-sm bg-muted skeleton-shimmer" />
+                            <Skeleton key={i} className="h-72 rounded-xl" />
                         ))}
                     </div>
                 ) : !projects?.length ? (
-                    <div className="flex flex-col items-center py-24 text-center gap-4">
-                        <Icon icon="mdi:bookmark-outline" className="text-7xl text-journal-sepia" />
-                        <Heading level="h2" className="text-2xl text-journal-ink">No saved projects yet</Heading>
-                        <Text variant="muted" className="max-w-sm">Browse projects and click the bookmark icon to save them here.</Text>
-                        <Link href="/projects">
-                            <Button className="gap-2 mt-2"><Icon icon="mdi:compass-outline" />Explore Projects</Button>
-                        </Link>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white px-6 py-16 text-center">
+                        <Bookmark className="h-8 w-8 text-stone-300" />
+                        <h2 className="text-sm font-medium text-stone-900">No saved projects yet</h2>
+                        <p className="max-w-sm text-[13px] text-stone-500">Browse projects and click the bookmark icon to save them here.</p>
+                        <Button asChild size="sm" className="mt-1">
+                            <Link href="/projects">
+                                <Compass /> Explore projects
+                            </Link>
+                        </Button>
                     </div>
                 ) : (
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
                     </div>
                 )}

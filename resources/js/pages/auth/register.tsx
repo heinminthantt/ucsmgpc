@@ -1,9 +1,9 @@
-import { Form, Head } from '@inertiajs/react';
 import { Icon } from '@iconify/react';
+import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
-import { Button, Input, Label, Spinner } from 'journal-ds';
+import { Button, Input, Label, Spinner } from '@/components/ui';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
@@ -37,7 +37,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="name"
                                     placeholder="Your name"
                                     aria-invalid={!!errors.name}
-                                    className="focus:border-journal-burgundy focus:ring-1 focus:ring-journal-burgundy"
+                                    className="focus:border-primary focus:ring-1 focus:ring-primary"
                                 />
                                 <InputError message={errors.name} />
                             </div>
@@ -53,7 +53,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="email"
                                     placeholder="you@example.com"
                                     aria-invalid={!!errors.email}
-                                    className="focus:border-journal-burgundy focus:ring-1 focus:ring-journal-burgundy"
+                                    className="focus:border-primary focus:ring-1 focus:ring-primary"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -70,7 +70,7 @@ export default function Register({ passwordRules }: Props) {
                                     passwordrules={passwordRules}
                                     aria-invalid={!!errors.password}
                                 />
-                                <p className="text-xs font-serif italic text-journal-sepia/80">
+                                <p className="text-xs italic text-muted-foreground/80">
                                     Use at least 8 characters with a mix of letters and numbers.
                                 </p>
                                 <InputError message={errors.password} />
@@ -105,16 +105,16 @@ export default function Register({ passwordRules }: Props) {
 
                         {/* Ruled separator with centered glyph */}
                         <div className="relative text-center" aria-hidden="true">
-                            <span className="absolute inset-x-0 top-1/2 h-px bg-journal-rule" />
-                            <span className="relative bg-background px-3 text-journal-sepia/60 text-xs">❦</span>
+                            <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                            <span className="relative bg-background px-3 text-muted-foreground/60 text-xs"></span>
                         </div>
 
-                        <p className="text-center font-serif text-sm text-journal-sepia">
+                        <p className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
                             <TextLink
                                 href={login()}
                                 tabIndex={6}
-                                className="text-journal-burgundy hover:underline underline-offset-4 font-medium"
+                                className="text-primary hover:underline underline-offset-4 font-medium"
                             >
                                 Log in
                             </TextLink>

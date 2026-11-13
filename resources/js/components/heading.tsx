@@ -1,5 +1,3 @@
-import { Heading as JournalHeading, Text } from 'journal-ds';
-
 export default function Heading({
     title,
     description,
@@ -12,28 +10,16 @@ export default function Heading({
     if (variant === 'small') {
         return (
             <header>
-                <JournalHeading level="h3" className="text-base font-medium text-journal-ink">
-                    {title}
-                </JournalHeading>
-                {description && (
-                    <Text variant="muted" className="mt-0.5 text-xs">
-                        {description}
-                    </Text>
-                )}
+                <h3 className="text-base font-medium text-foreground">{title}</h3>
+                {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
             </header>
         );
     }
 
     return (
         <div className="mb-8">
-            <JournalHeading level="h1" className="text-3xl text-journal-ink">
-                {title}
-            </JournalHeading>
-            {description && (
-                <Text variant="muted" className="mt-1.5">
-                    {description}
-                </Text>
-            )}
+            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+            {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
         </div>
     );
 }

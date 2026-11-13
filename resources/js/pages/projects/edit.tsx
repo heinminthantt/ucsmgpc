@@ -1,18 +1,15 @@
-import { Head, router } from '@inertiajs/react';
-import { useState, useMemo, lazy, Suspense, useRef, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import {
-    Button, Badge, Card, CardContent, CardHeader,
-    Input, Label,
-    Heading, Text, OrnamentalDivider,
-} from 'journal-ds';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { Head, router } from '@inertiajs/react';
+import { useState, useMemo, lazy, Suspense, useRef } from 'react';
 import { toast } from 'sonner';
+import { ErrorBoundary } from '@/components/error-boundary';
+import {
+    Button, Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui';
 import { useDepartments, useAllCourses, useSupervisors } from '@/hooks/useCatalog';
 import api from '@/lib/api';
 import type { Project } from '@/types/catalog';
 import 'react-quill-new/dist/quill.snow.css';
-import { ErrorBoundary } from '@/components/error-boundary';
 
 const ReactQuill = lazy(() => import('react-quill-new'));
 
@@ -38,21 +35,18 @@ const SEMESTER_PREFIXES: Record<string, string[]> = {
     'Final Project': ['Final'],
 };
 
-/* Editorial section header used across every card for a consistent rhythm */
-function SectionHeader({ icon, step, title, hint }: { icon: string; step: string; title: string; hint?: string }) {
+function SectionHeader({ title, hint }: { title: string; hint?: string }) {
     return (
-        <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-                <Icon icon={icon} className="text-journal-burgundy text-xl shrink-0" />
-                <div>
-                    <h2 className="font-display text-base font-semibold text-journal-ink leading-tight">{title}</h2>
-                    {hint && <p className="text-xs italic font-serif text-journal-sepia mt-0.5">{hint}</p>}
-                </div>
-            </div>
-            <span className="journal-eyebrow text-[0.6rem] text-journal-sepia/70 shrink-0 pt-1">{step}</span>
+        <div>
+            <h2 className="text-sm font-medium text-stone-900">{title}</h2>
+            {hint && <p className="mt-0.5 text-[13px] text-stone-500">{hint}</p>}
         </div>
     );
 }
+
+const sectionClass = 'rounded-xl border border-stone-200 bg-white p-5 space-y-4';
+const textareaClass =
+    'w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-stone-300';
 
 export default function ProjectEdit({ project }: Props) {
     const { data: departments } = useDepartments();
@@ -79,19 +73,27 @@ export default function ProjectEdit({ project }: Props) {
                     input.click();
                     input.onchange = async () => {
                         const file = input.files ? input.files[0] : null;
-                        if (!file) return;
+
+                        if (!file) {
+return;
+}
+
                         if (file.size > 10 * 1024 * 1024) {
                             toast.error('Image exceeds 10MB limit');
+
                             return;
                         }
+
                         const formData = new FormData();
                         formData.append('image', file);
+
                         try {
                             const res = await api.post('/projects/upload-image', formData, {
                                 headers: { 'Content-Type': 'multipart/form-data' }
                             });
                             const url = res.data.url;
                             const quill = quillRef.current?.getEditor();
+
                             if (quill) {
                                 const range = quill.getSelection(true);
                                 quill.insertEmbed(range.index, 'image', url);
@@ -106,12 +108,21 @@ export default function ProjectEdit({ project }: Props) {
     }), []);
 
     const existing: { name: string; rollNumber: string }[] = useMemo(() => {
-        if (!project.membersJson) return [{ name: '', rollNumber: '' }];
+        if (!project.membersJson) {
+return [{ name: '', rollNumber: '' }];
+}
+
         try {
             const parsed = JSON.parse(project.membersJson);
-            if (Array.isArray(parsed)) return parsed.length ? parsed : [{ name: '', rollNumber: '' }];
+
+            if (Array.isArray(parsed)) {
+return parsed.length ? parsed : [{ name: '', rollNumber: '' }];
+}
+
             return Object.entries(parsed).map(([name, rollNumber]) => ({ name, rollNumber: rollNumber as string }));
-        } catch { return [{ name: '', rollNumber: '' }]; }
+        } catch {
+ return [{ name: '', rollNumber: '' }]; 
+}
     }, [project.membersJson]);
 
     const [form, setForm] = useState({
@@ -135,13 +146,21 @@ export default function ProjectEdit({ project }: Props) {
 
     const academicYears = useMemo(() => {
         const list: string[] = [];
-        for (let y = 2020; y <= new Date().getFullYear() - 1; y++) list.push(`${y}-${y + 1}`);
+
+        for (let y = 2020; y <= new Date().getFullYear() - 1; y++) {
+list.push(`${y}-${y + 1}`);
+}
+
         return list.reverse();
     }, []);
 
     const filteredCourses = useMemo(() => {
-        if (!form.departmentId || !form.student_year || !allCourses) return [];
+        if (!form.departmentId || !form.student_year || !allCourses) {
+return [];
+}
+
         const prefixes = SEMESTER_PREFIXES[form.student_year] ?? [];
+
         return allCourses.filter(
             (c) => c.department_id === parseInt(form.departmentId) &&
                    prefixes.some((p) => c.code?.startsWith(p)),
@@ -153,6 +172,7 @@ export default function ProjectEdit({ project }: Props) {
 
     const addTag = () => {
         const t = tagInput.trim().toLowerCase();
+
         if (t && !tags.includes(t) && tags.length < 5) {
             setTags([...tags, t]);
             setTagInput('');
@@ -168,25 +188,39 @@ export default function ProjectEdit({ project }: Props) {
         fd.append('title', form.title);
         fd.append('description', form.description);
         fd.append('objectives', form.objectives);
-        if (form.benefits) fd.append('benefits', form.benefits);
-        if (form.body) fd.append('body', form.body);
-        if (form.githubLink) fd.append('github_link', form.githubLink);
+
+        if (form.benefits) {
+fd.append('benefits', form.benefits);
+}
+
+        if (form.body) {
+fd.append('body', form.body);
+}
+
+        if (form.githubLink) {
+fd.append('github_link', form.githubLink);
+}
+
         fd.append('academic_year', form.academic_year);
         fd.append('student_year', form.student_year);
         fd.append('department_id', form.departmentId);
         fd.append('course_id', form.courseId);
-        if (form.supervisorId) fd.append('supervisor_id', form.supervisorId);
+
+        if (form.supervisorId) {
+fd.append('supervisor_id', form.supervisorId);
+}
 
         tags.forEach((tag) => fd.append('tags[]', tag));
 
         const validMembers = members.filter((m) => m.name.trim());
+
         if (validMembers.length) {
             const membersMap = validMembers.reduce((acc, m) => ({ ...acc, [m.name]: m.rollNumber }), {});
             fd.append('members_json', JSON.stringify(membersMap));
         }
 
         files.forEach((f) => fd.append('project_files[]', f));
-        
+
         // Emulate PUT request over multipart FormData configuration
         fd.append('_method', 'PUT');
 
@@ -212,337 +246,274 @@ export default function ProjectEdit({ project }: Props) {
         }
     };
 
-    const textareaClass =
-        'w-full resize-none rounded-md border border-input bg-background px-3 py-2 font-serif text-sm leading-relaxed focus:border-journal-burgundy focus:outline-none focus:ring-1 focus:ring-journal-burgundy transition-colors duration-200';
-
     return (
         <>
             <Head title={`Edit Project — ${form.title}`} />
-            <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-
-                {/* ── Editorial Masthead ─────────────────────────────────── */}
-                <header className="text-center space-y-3 mb-10">
-                    <p className="journal-eyebrow">Modify Entry &middot; Catalog Submission</p>
-                    <Heading level="h1" className="font-display text-4xl tracking-tight text-journal-ink text-balance">
-                        Edit Project Details
-                    </Heading>
-                    <Text variant="muted" italic className="font-serif text-base max-w-xl mx-auto text-pretty">
-                        Update the record details on the left, adjust your report layout on the right, 
-                        and save the changes to commit them back to your supervisor.
-                    </Text>
-                    <OrnamentalDivider variant="ornamental" glyph="❦" className="mx-auto pt-2" />
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <header className="mb-8 space-y-1">
+                    <h1 className="text-xl font-semibold text-stone-900">Edit project</h1>
+                    <p className="max-w-xl text-sm text-stone-500">
+                        Update the details and your report, then save the changes.
+                    </p>
                 </header>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="grid gap-6 lg:grid-cols-[1fr_2fr] items-start">
-                        {/* ── Left column ── */}
+                    <div className="grid items-start gap-6 lg:grid-cols-[1fr_2fr]">
                         <div className="space-y-5">
-                            {/* General info */}
-                            <Card withVignette className="border-journal-rule overflow-hidden">
-                                <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                    <SectionHeader icon="mdi:information-outline" step="01" title="General Information" hint="Title, summary, and objectives" />
-                                </CardHeader>
-                                <CardContent className="space-y-4 pt-5">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="title" className="font-medium text-journal-ink">
-                                            Title <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                        </Label>
-                                        <Input id="title" required maxLength={255} placeholder="AI-Powered Chatbot"
-                                            className="bg-background focus:ring-1"
-                                            value={form.title} onChange={(e) => set('title', e.target.value)} />
-                                        <p className={`text-xs text-right tabular-nums ${form.title.length > 230 ? 'text-journal-burgundy' : 'text-journal-sepia/70'}`}>
-                                            {form.title.length}/255
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="description" className="font-medium text-journal-ink">
-                                            Short Description <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                        </Label>
-                                        <textarea id="description" required rows={3}
-                                            className={textareaClass}
-                                            placeholder="A brief summary readers will see on the catalog card..."
-                                            value={form.description} onChange={(e) => set('description', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="objectives" className="font-medium text-journal-ink">
-                                            Objectives <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                        </Label>
-                                        <textarea id="objectives" required rows={3}
-                                            className={textareaClass}
-                                            placeholder="What does this project aim to achieve?"
-                                            value={form.objectives} onChange={(e) => set('objectives', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="githubLink" className="font-medium text-journal-ink">GitHub Link</Label>
-                                        <div className="relative">
-                                            <Icon icon="mdi:github" className="absolute left-3 top-1/2 -translate-y-1/2 text-journal-sepia" aria-hidden="true" />
-                                            <Input id="githubLink" type="url" placeholder="https://github.com/..."
-                                                className="pl-9 bg-background focus:ring-1"
-                                                value={form.githubLink} onChange={(e) => set('githubLink', e.target.value)} />
-                                        </div>
-                                        <p className="text-xs italic font-serif text-journal-sepia/70">Optional — link the source repository if available.</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <section className={sectionClass}>
+                                <SectionHeader title="General information" hint="Title, summary, and objectives" />
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="title">Title <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Input id="title" required maxLength={255} placeholder="AI-powered chatbot"
+                                        value={form.title} onChange={(e) => set('title', e.target.value)} />
+                                    <p className={`text-right text-xs tabular-nums ${form.title.length > 230 ? 'text-red-600' : 'text-stone-400'}`}>
+                                        {form.title.length}/255
+                                    </p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="description">Short description <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <textarea id="description" required rows={3}
+                                        className={textareaClass}
+                                        placeholder="A brief summary readers will see on the catalog card..."
+                                        value={form.description} onChange={(e) => set('description', e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="objectives">Objectives <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <textarea id="objectives" required rows={3}
+                                        className={textareaClass}
+                                        placeholder="What does this project aim to achieve?"
+                                        value={form.objectives} onChange={(e) => set('objectives', e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="githubLink">GitHub link</Label>
+                                    <Input id="githubLink" type="url" placeholder="https://github.com/..."
+                                        value={form.githubLink} onChange={(e) => set('githubLink', e.target.value)} />
+                                    <p className="text-[13px] text-stone-500">Optional. Link the source repository if available.</p>
+                                </div>
+                            </section>
 
-                            {/* Academic settings */}
-                            <Card withVignette className="border-journal-rule overflow-hidden">
-                                <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                    <SectionHeader icon="mdi:school-outline" step="02" title="Academic Settings" hint="Year, semester, department, and course" />
-                                </CardHeader>
-                                <CardContent className="space-y-4 pt-5">
-                                    {[
-                                        { label: 'Academic Year', required: true, field: 'academic_year', items: academicYears.map((y) => ({ v: y, l: y })), placeholder: 'Select year' },
-                                        { label: 'Semester', required: true, field: 'student_year', items: SEMESTERS.map((s) => ({ v: s, l: s })), placeholder: 'Select semester' },
-                                    ].map(({ label, required, field, items, placeholder }) => (
-                                        <div key={field} className="space-y-1.5">
-                                            <Label className="font-medium text-journal-ink">
-                                                {label} {required && <span className="text-journal-burgundy" aria-hidden="true">*</span>}
-                                            </Label>
-                                            <Select value={(form as any)[field]} onValueChange={(v) => {
-                                                set(field, v);
-                                                if (field === 'student_year') set('courseId', '');
-                                            }}>
-                                                <SelectTrigger className="w-full bg-background"><SelectValue placeholder={placeholder} /></SelectTrigger>
-                                                <SelectContent>
-                                                    {items.map(({ v, l }) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    ))}
-                                    <div className="space-y-1.5">
-                                        <Label className="font-medium text-journal-ink">
-                                            Department <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                        </Label>
-                                        <Select value={form.departmentId} onValueChange={(v) => { set('departmentId', v); set('courseId', ''); }}>
-                                            <SelectTrigger className="w-full bg-background"><SelectValue placeholder="Select department" /></SelectTrigger>
-                                            <SelectContent>
-                                                {departments?.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="font-medium text-journal-ink">
-                                            Course <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                        </Label>
-                                        <Select value={form.courseId} onValueChange={(v) => set('courseId', v)}
-                                            disabled={!form.departmentId || !form.student_year}>
-                                            <SelectTrigger className="w-full bg-background disabled:opacity-60">
-                                                <SelectValue placeholder={!form.departmentId ? 'Select department first' : !form.student_year ? 'Select semester first' : 'Select course'} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {filteredCourses.length === 0
-                                                    ? <SelectItem disabled value="_">No courses for this semester</SelectItem>
-                                                    : filteredCourses.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.code} — {c.name}</SelectItem>)
-                                                }
-                                            </SelectContent>
-                                        </Select>
-                                        {(!form.departmentId || !form.student_year) && (
-                                            <p className="text-xs italic font-serif text-journal-sepia/70">
-                                                Courses unlock after choosing a department and semester.
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="font-medium text-journal-ink">Supervisor</Label>
-                                        <Select value={form.supervisorId} onValueChange={(v) => set('supervisorId', v)}>
-                                            <SelectTrigger className="w-full bg-background"><SelectValue placeholder="Select supervisor" /></SelectTrigger>
-                                            <SelectContent>
-                                                {supervisors?.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <section className={sectionClass}>
+                                <SectionHeader title="Academic settings" hint="Year, semester, department, and course" />
+                                {[
+                                    { label: 'Academic year', required: true, field: 'academic_year', items: academicYears.map((y) => ({ v: y, l: y })), placeholder: 'Select year' },
+                                    { label: 'Semester', required: true, field: 'student_year', items: SEMESTERS.map((s) => ({ v: s, l: s })), placeholder: 'Select semester' },
+                                ].map(({ label, required, field, items, placeholder }) => (
+                                    <div key={field} className="space-y-1.5">
+                                        <Label>{label} {required && <span className="text-stone-400" aria-hidden="true">*</span>}</Label>
+                                        <Select value={(form as any)[field]} onValueChange={(v) => {
+                                            set(field, v);
 
-                            {/* Tags */}
-                            <Card withVignette className="border-journal-rule overflow-hidden">
-                                <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                    <SectionHeader icon="mdi:tag-multiple-outline" step="03" title="Languages &amp; Tools" hint="Up to five technology tags" />
-                                </CardHeader>
-                                <CardContent className="space-y-3 pt-5">
-                                    <div className="flex gap-2">
-                                        <Input placeholder="e.g. react, python" value={tagInput}
-                                            className="bg-background focus:ring-1"
-                                            aria-label="Add a technology tag"
-                                            onChange={(e) => setTagInput(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                                                    e.preventDefault();
-                                                    addTag();
-                                                }
-                                            }}
-                                            disabled={tags.length >= 5} />
-                                        <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={tags.length >= 5 || !tagInput.trim()}>
-                                            Add
-                                        </Button>
+                                            if (field === 'student_year') {
+set('courseId', '');
+}
+                                        }}>
+                                            <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
+                                            <SelectContent>
+                                                {items.map(({ v, l }) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-xs text-journal-sepia/70 tabular-nums">{tags.length}/5 tags</p>
-                                        {tags.length >= 5 && <p className="text-xs italic font-serif text-journal-burgundy">Tag limit reached</p>}
-                                    </div>
-                                    {tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {tags.map((t) => (
-                                                <Badge key={t} variant="secondary" className="gap-1 pr-1">
-                                                    {t}
-                                                    <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))}
-                                                        className="ml-1 rounded-full px-1 hover:bg-journal-burgundy/15 hover:text-journal-burgundy transition-colors"
-                                                        aria-label={`Remove tag ${t}`}>
-                                                        ×
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                        </div>
+                                ))}
+                                <div className="space-y-1.5">
+                                    <Label>Department <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Select value={form.departmentId} onValueChange={(v) => {
+ set('departmentId', v); set('courseId', ''); 
+}}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select department" /></SelectTrigger>
+                                        <SelectContent>
+                                            {departments?.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Course <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                    <Select value={form.courseId} onValueChange={(v) => set('courseId', v)}
+                                        disabled={!form.departmentId || !form.student_year}>
+                                        <SelectTrigger className="w-full disabled:opacity-60">
+                                            <SelectValue placeholder={!form.departmentId ? 'Select department first' : !form.student_year ? 'Select semester first' : 'Select course'} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {filteredCourses.length === 0
+                                                ? <SelectItem disabled value="_">No courses for this semester</SelectItem>
+                                                : filteredCourses.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.code} — {c.name}</SelectItem>)
+                                            }
+                                        </SelectContent>
+                                    </Select>
+                                    {(!form.departmentId || !form.student_year) && (
+                                        <p className="text-[13px] text-stone-500">Courses unlock after choosing a department and semester.</p>
                                     )}
-                                </CardContent>
-                            </Card>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Supervisor</Label>
+                                    <Select value={form.supervisorId} onValueChange={(v) => set('supervisorId', v)}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select supervisor" /></SelectTrigger>
+                                        <SelectContent>
+                                            {supervisors?.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </section>
 
-                            {/* Members */}
-                            <Card withVignette className="border-journal-rule overflow-hidden">
-                                <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                    <SectionHeader icon="mdi:account-group-outline" step="04" title="Team Members" hint="Credit every contributor" />
-                                </CardHeader>
-                                <CardContent className="space-y-3 pt-5">
-                                    {members.map((m, i) => (
-                                        <div key={i} className="rounded-md border border-journal-rule/40 bg-journal-warm/5 p-3">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="journal-eyebrow text-[0.6rem]">Member {i + 1}</span>
-                                                {members.length > 1 && (
-                                                    <button type="button" onClick={() => setMembers(members.filter((_, j) => j !== i))}
-                                                        className="text-xs text-destructive hover:underline underline-offset-2 transition-colors"
-                                                        aria-label={`Remove member ${i + 1}`}>
-                                                        Remove
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs font-medium text-journal-ink">
-                                                        Name <span className="text-journal-burgundy" aria-hidden="true">*</span>
-                                                    </Label>
-                                                    <Input required placeholder="Full name" value={m.name}
-                                                        className="bg-background focus:ring-1"
-                                                        onChange={(e) => {
-                                                            const n = [...members]; n[i] = { ...n[i], name: e.target.value };
-                                                            setMembers(n);
-                                                        }} />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs font-medium text-journal-ink">Roll Number</Label>
-                                                    <Input placeholder="e.g. UCSMG-001" value={m.rollNumber}
-                                                        className="bg-background focus:ring-1"
-                                                        onChange={(e) => {
-                                                            const n = [...members]; n[i] = { ...n[i], rollNumber: e.target.value };
-                                                            setMembers(n);
-                                                        }} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <Button type="button" variant="outline" size="sm" className="w-full gap-1.5"
-                                        onClick={() => members.length < 8 && setMembers([...members, { name: '', rollNumber: '' }])}
-                                        disabled={members.length >= 8}>
-                                        <Icon icon="mdi:plus" />Add Member ({members.length}/8)
+                            <section className={sectionClass}>
+                                <SectionHeader title="Languages and tools" hint="Up to five technology tags" />
+                                <div className="flex gap-2">
+                                    <Input placeholder="e.g. react, python" value={tagInput}
+                                        aria-label="Add a technology tag"
+                                        onChange={(e) => setTagInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                                                e.preventDefault();
+                                                addTag();
+                                            }
+                                        }}
+                                        disabled={tags.length >= 5} />
+                                    <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={tags.length >= 5 || !tagInput.trim()}>
+                                        Add
                                     </Button>
-                                </CardContent>
-                            </Card>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs tabular-nums text-stone-400">{tags.length}/5 tags</p>
+                                    {tags.length >= 5 && <p className="text-xs text-stone-500">Tag limit reached</p>}
+                                </div>
+                                {tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {tags.map((t) => (
+                                            <Badge key={t} variant="secondary" className="gap-1 pr-1">
+                                                {t}
+                                                <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))}
+                                                    className="ml-1 rounded-full px-1 hover:bg-stone-200"
+                                                    aria-label={`Remove tag ${t}`}>
+                                                    ×
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
 
-                            {/* Files */}
-                            <Card withVignette className="border-journal-rule overflow-hidden">
-                                <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                    <SectionHeader icon="mdi:file-upload-outline" step="05" title="Project Files" hint="ZIP archives only, max 50 MB each" />
-                                </CardHeader>
-                                <CardContent className="space-y-3 pt-5">
-                                    <label className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-journal-rule bg-journal-warm/5 px-4 py-6 text-center cursor-pointer hover:bg-journal-warm/15 hover:border-journal-burgundy/40 transition-colors">
-                                        <Icon icon="mdi:cloud-upload-outline" className="text-2xl text-journal-sepia" aria-hidden="true" />
-                                        <span className="text-sm font-medium text-journal-ink">Click to upload new ZIP files</span>
-                                        <span className="text-xs italic font-serif text-journal-sepia/70">ZIP files only &middot; max 50 MB each</span>
-                                        <input type="file" accept=".zip" multiple className="sr-only"
-                                            onChange={(e) => {
-                                                if (!e.target.files) return;
-                                                const newFiles = Array.from(e.target.files);
-                                                const validFiles = newFiles.filter(f => {
-                                                    if (f.size > 50 * 1024 * 1024) {
-                                                        toast.error(`File ${f.name} exceeds 50MB limit`);
-                                                        return false;
-                                                    }
-                                                    return true;
-                                                });
-                                                setFiles(prev => [...prev, ...validFiles]);
-                                            }} />
-                                    </label>
-                                    {project.projectFiles?.length > 0 && (
-                                        <p className="text-xs italic text-journal-sepia/80 pl-1">
-                                            {project.projectFiles.length} existing file archive(s) attached.
-                                        </p>
-                                    )}
-                                    {files.length > 0 && (
-                                        <ul className="space-y-1.5">
-                                            {files.map((f, i) => (
-                                                <li key={i} className="flex items-center gap-2 rounded-md bg-journal-warm/10 border border-journal-rule/30 px-3 py-2 text-xs text-journal-ink-light">
-                                                    <Icon icon="mdi:folder-zip-outline" className="text-journal-burgundy shrink-0" aria-hidden="true" />
-                                                    <span className="truncate flex-1">{f.name}</span>
-                                                    <span className="tabular-nums text-journal-sepia shrink-0">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <section className={sectionClass}>
+                                <SectionHeader title="Team members" hint="Credit every contributor" />
+                                {members.map((m, i) => (
+                                    <div key={i} className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[13px] font-medium text-stone-700">Member {i + 1}</span>
+                                            {members.length > 1 && (
+                                                <button type="button" onClick={() => setMembers(members.filter((_, j) => j !== i))}
+                                                    className="text-xs text-red-600 hover:underline"
+                                                    aria-label={`Remove member ${i + 1}`}>
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">Name <span className="text-stone-400" aria-hidden="true">*</span></Label>
+                                                <Input required placeholder="Full name" value={m.name}
+                                                    onChange={(e) => {
+                                                        const n = [...members]; n[i] = { ...n[i], name: e.target.value };
+                                                        setMembers(n);
+                                                    }} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">Roll number</Label>
+                                                <Input placeholder="e.g. UCSMG-001" value={m.rollNumber}
+                                                    onChange={(e) => {
+                                                        const n = [...members]; n[i] = { ...n[i], rollNumber: e.target.value };
+                                                        setMembers(n);
+                                                    }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                <Button type="button" variant="outline" size="sm" className="w-full"
+                                    onClick={() => members.length < 8 && setMembers([...members, { name: '', rollNumber: '' }])}
+                                    disabled={members.length >= 8}>
+                                    Add member ({members.length}/8)
+                                </Button>
+                            </section>
+
+                            <section className={sectionClass}>
+                                <SectionHeader title="Project files" hint="ZIP archives only, max 50 MB each" />
+                                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 px-4 py-6 text-center hover:bg-stone-100">
+                                    <Icon icon="mdi:cloud-upload-outline" className="text-2xl text-stone-400" aria-hidden="true" />
+                                    <span className="text-sm font-medium text-stone-900">Click to upload new ZIP files</span>
+                                    <span className="text-[13px] text-stone-500">ZIP files only · max 50 MB each</span>
+                                    <input type="file" accept=".zip" multiple className="sr-only"
+                                        onChange={(e) => {
+                                            if (!e.target.files) {
+return;
+}
+
+                                            const newFiles = Array.from(e.target.files);
+                                            const validFiles = newFiles.filter(f => {
+                                                if (f.size > 50 * 1024 * 1024) {
+                                                    toast.error(`File ${f.name} exceeds 50MB limit`);
+
+                                                    return false;
+                                                }
+
+                                                return true;
+                                            });
+                                            setFiles(prev => [...prev, ...validFiles]);
+                                        }} />
+                                </label>
+                                {project.projectFiles?.length > 0 && (
+                                    <p className="text-[13px] text-stone-500">
+                                        {project.projectFiles.length} existing file archive(s) attached.
+                                    </p>
+                                )}
+                                {files.length > 0 && (
+                                    <ul className="space-y-1.5">
+                                        {files.map((f, i) => (
+                                            <li key={i} className="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700">
+                                                <Icon icon="mdi:folder-zip-outline" className="shrink-0 text-stone-400" aria-hidden="true" />
+                                                <span className="flex-1 truncate">{f.name}</span>
+                                                <span className="shrink-0 tabular-nums text-stone-400">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </section>
                         </div>
 
-                        {/* ── Right column — Report editor ── */}
-                        <Card withVignette className="flex flex-col border-journal-rule overflow-hidden lg:sticky lg:top-6">
-                            <CardHeader className="border-b border-journal-rule/40 bg-journal-warm/5">
-                                <SectionHeader icon="mdi:file-document-edit-outline" step="06" title="Project Report" hint="The full written manuscript of your work" />
-                            </CardHeader>
-                            <CardContent className="flex flex-col flex-1 gap-4 pt-5">
-                                <div className="rounded-md border border-journal-rule overflow-hidden bg-background" style={{ minHeight: 520 }}>
-                                    <ErrorBoundary>
-                                        <Suspense fallback={
-                                            <div className="flex items-center justify-center h-64 text-journal-sepia font-serif italic">
-                                                <Icon icon="mdi:loading" className="animate-spin mr-2" aria-hidden="true" />Loading editor...
-                                            </div>
-                                        }>
-                                            <ReactQuill
-                                                ref={quillRef}
-                                                theme="snow"
-                                                modules={modules}
-                                                placeholder="Write your detailed project report here..."
-                                                value={form.body}
-                                                onChange={(v) => set('body', v)}
-                                                style={{ height: 480 }}
-                                            />
-                                        </Suspense>
-                                    </ErrorBoundary>
-                                </div>
+                        <section className={`${sectionClass} flex flex-col lg:sticky lg:top-6`}>
+                            <SectionHeader title="Project report" hint="The full written report of your work" />
+                            <div className="overflow-hidden rounded-lg border border-stone-200 bg-white" style={{ minHeight: 520 }}>
+                                <ErrorBoundary>
+                                    <Suspense fallback={
+                                        <div className="flex h-64 items-center justify-center text-sm text-stone-500">
+                                            <Icon icon="mdi:loading" className="mr-2 animate-spin" aria-hidden="true" />Loading editor...
+                                        </div>
+                                    }>
+                                        <ReactQuill
+                                            ref={quillRef}
+                                            theme="snow"
+                                            modules={modules}
+                                            placeholder="Write your detailed project report here..."
+                                            value={form.body}
+                                            onChange={(v) => set('body', v)}
+                                            style={{ height: 480 }}
+                                        />
+                                    </Suspense>
+                                </ErrorBoundary>
+                            </div>
 
-                                <OrnamentalDivider variant="ornamental" glyph="❉" className="mx-auto opacity-70" />
-
-                                {/* Submission plate */}
-                                <div className="rounded-md border border-journal-rule bg-journal-warm/10 p-6 text-center space-y-3">
-                                    <p className="journal-eyebrow">Final Step</p>
-                                    <h3 className="font-display text-lg font-semibold text-journal-ink">Commit Changes?</h3>
-                                    <p className="font-serif text-sm italic text-journal-sepia max-w-sm mx-auto text-pretty">
-                                        Your modified entry will update the active catalog file and re-route your status for check.
-                                    </p>
-                                    <div className="flex justify-center gap-3">
-                                        <Button type="button" variant="outline" size="lg" className="px-6"
-                                            onClick={() => router.visit(`/projects/${project.id}/view`)}>
-                                            Cancel
-                                        </Button>
-                                        <Button type="submit" size="lg" disabled={submitting} className="px-10 gap-2">
-                                            {submitting ? (
-                                                <><Icon icon="mdi:loading" className="animate-spin" aria-hidden="true" />Saving Changes...</>
-                                            ) : (
-                                                <><Icon icon="mdi:content-save-outline" aria-hidden="true" />Save Changes</>
-                                            )}
-                                        </Button>
-                                    </div>
+                            <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-6 text-center">
+                                <h3 className="text-sm font-medium text-stone-900">Save changes?</h3>
+                                <p className="mx-auto max-w-sm text-sm text-stone-500">
+                                    Your updated project will be saved back to the catalog.
+                                </p>
+                                <div className="flex justify-center gap-3">
+                                    <Button type="button" variant="outline" size="lg"
+                                        onClick={() => router.visit(`/projects/${project.id}/view`)}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" size="lg" disabled={submitting} className="px-8">
+                                        {submitting ? 'Saving changes...' : 'Save changes'}
+                                    </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </section>
                     </div>
                 </form>
             </div>

@@ -1,8 +1,8 @@
-import { Form, Head } from '@inertiajs/react';
 import { Icon } from '@iconify/react';
+import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
-import { Button, Input, Label, Spinner } from 'journal-ds';
+import { Button, Input, Label, Spinner } from '@/components/ui';
 import { update } from '@/routes/password';
 
 type Props = {
@@ -28,7 +28,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                             <div className="relative">
                                 <Icon
                                     icon="mdi:lock-outline"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-journal-sepia/60 text-sm"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 text-sm"
                                     aria-hidden="true"
                                 />
                                 <Input
@@ -38,10 +38,10 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                     autoComplete="email"
                                     value={email}
                                     readOnly
-                                    className="opacity-60 bg-journal-warm/20 pr-9"
+                                    className="opacity-60 bg-muted/20 pr-9"
                                 />
                             </div>
-                            <p className="text-xs font-serif italic text-journal-sepia/80">
+                            <p className="text-xs italic text-muted-foreground/80">
                                 Resetting the password for this account.
                             </p>
                             <InputError message={errors.email} />

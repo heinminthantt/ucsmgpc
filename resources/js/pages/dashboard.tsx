@@ -1,12 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { Icon } from '@iconify/react';
-import {
-    Button, Card, CardContent, Badge,
-    Heading, Text, Eyebrow,
-    OrnamentalDivider,
-} from 'journal-ds';
-import { useMe, useUserProjects, useNotifications } from '@/hooks/useCatalog';
+import { ArrowRight, Bell, CheckCircle2, ClipboardCheck, Clock, Compass, Folder, FolderOpen, Plus, Shield } from 'lucide-react';
 import { ProjectCard } from '@/components/project-card';
+import { Button, Card, CardContent } from '@/components/ui';
+import { useMe, useUserProjects, useNotifications } from '@/hooks/useCatalog';
 
 export default function Dashboard() {
     const { data: me } = useMe();
@@ -16,52 +12,52 @@ export default function Dashboard() {
     const unread = notifications?.filter((n) => !n.is_read).length ?? 0;
     const recentProjects = myProjects?.slice(0, 3) ?? [];
 
+    const stats = [
+        { label: 'My projects', value: myProjects?.length ?? 0, icon: FolderOpen, href: '/profile' },
+        { label: 'Approved', value: myProjects?.filter((p) => p.approvalStatus === 'APPROVED').length ?? 0, icon: CheckCircle2, href: '/profile' },
+        { label: 'Pending review', value: myProjects?.filter((p) => p.approvalStatus === 'PENDING').length ?? 0, icon: Clock, href: '/profile' },
+        { label: 'Notifications', value: unread, icon: Bell, href: '/notifications' },
+    ];
+
     return (
         <>
             <Head title="Dashboard" />
-            <div className="mx-auto max-w-5xl px-6 lg:px-8 py-12">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
-                    {/* Welcome */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <Heading level="h1" className="text-3xl text-journal-ink">
-                                Welcome back{me?.name ? `, ${me.name.split(' ')[0]}` : ''}!
-                            </Heading>
-                            <Text variant="muted" className="mt-1">
-                                Here's what's happening with your projects.
-                            </Text>
+                            <h1 className="text-2xl font-semibold text-stone-900">
+                                Welcome back{me?.name ? `, ${me.name.split(' ')[0]}` : ''}
+                            </h1>
+                            <p className="mt-1 text-sm text-stone-500">
+                                Here&apos;s what&apos;s happening with your projects.
+                            </p>
                         </div>
                         <div className="flex gap-2">
-                            <Link href="/projects/create">
-                                <Button size="sm" className="gap-1.5">
-                                    <Icon icon="mdi:plus" />New Project
-                                </Button>
-                            </Link>
-                            <Link href="/projects">
-                                <Button size="sm" variant="outline" className="gap-1.5">
-                                    <Icon icon="mdi:compass-outline" />Browse
-                                </Button>
-                            </Link>
+                            <Button asChild size="sm">
+                                <Link href="/projects/create">
+                                    <Plus /> New project
+                                </Link>
+                            </Button>
+                            <Button asChild size="sm" variant="outline">
+                                <Link href="/projects">
+                                    <Compass /> Browse
+                                </Link>
+                            </Button>
                         </div>
                     </div>
 
-                    {/* Quick stats */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        {[
-                            { label: 'My Projects', value: myProjects?.length ?? 0, icon: 'mdi:folder-multiple-outline', color: 'text-journal-burgundy', bg: 'bg-journal-burgundy/10', href: '/profile' },
-                            { label: 'Approved', value: myProjects?.filter((p) => p.approvalStatus === 'APPROVED').length ?? 0, icon: 'mdi:check-decagram-outline', color: 'text-journal-forest', bg: 'bg-journal-forest/10', href: '/profile' },
-                            { label: 'Pending Review', value: myProjects?.filter((p) => p.approvalStatus === 'PENDING').length ?? 0, icon: 'mdi:clock-outline', color: 'text-journal-gold', bg: 'bg-journal-gold/10', href: '/profile' },
-                            { label: 'Notifications', value: unread, icon: 'mdi:bell-outline', color: 'text-journal-ink-light', bg: 'bg-journal-warm/40', href: '/notifications' },
-                        ].map((s) => (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {stats.map((s) => (
                             <Link key={s.label} href={s.href}>
-                                <Card className="p-5 hover:shadow-md transition-all hover:-translate-y-0.5 cursor-pointer">
-                                    <CardContent className="p-0 flex items-center gap-4">
-                                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-sm ${s.bg} ${s.color}`}>
-                                            <Icon icon={s.icon} className="text-2xl" />
+                                <Card className="p-5 transition-colors hover:border-stone-300">
+                                    <CardContent className="flex items-center gap-3 p-0">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500">
+                                            <s.icon className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <div className={`text-2xl font-display font-bold ${s.color}`}>{s.value}</div>
-                                            <div className="text-xs font-serif text-journal-sepia">{s.label}</div>
+                                            <div className="text-xl font-semibold text-stone-900">{s.value}</div>
+                                            <div className="text-[13px] text-stone-500">{s.label}</div>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -69,52 +65,49 @@ export default function Dashboard() {
                         ))}
                     </div>
 
-                    {/* Role-specific shortcuts */}
                     {(me?.role === 'SUPERVISOR' || me?.role === 'ADMIN') && (
-                        <Card withVignette className="p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Icon icon="mdi:clipboard-check-outline" className="text-journal-burgundy text-xl" />
-                                <Heading level="h3" className="text-base text-journal-ink">Quick Actions</Heading>
+                        <div className="rounded-xl border border-stone-200 bg-white p-5">
+                            <div className="mb-4 flex items-center gap-2">
+                                <ClipboardCheck className="h-5 w-5 text-stone-400" />
+                                <h2 className="text-sm font-medium text-stone-900">Quick actions</h2>
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <Link href="/supervisor-dashboard">
-                                    <Button variant="outline" size="sm" className="gap-1.5">
-                                        <Icon icon="mdi:clipboard-check-outline" />Supervisor Dashboard
-                                    </Button>
-                                </Link>
-                                {me.role === 'ADMIN' && (
-                                    <Link href="/admin-dashboard">
-                                        <Button variant="outline" size="sm" className="gap-1.5">
-                                            <Icon icon="mdi:shield-crown-outline" />Admin Dashboard
-                                        </Button>
+                            <div className="flex flex-wrap gap-2">
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href="/supervisor-dashboard">
+                                        <ClipboardCheck /> Supervisor dashboard
                                     </Link>
+                                </Button>
+                                {me.role === 'ADMIN' && (
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href="/admin-dashboard">
+                                            <Shield /> Admin dashboard
+                                        </Link>
+                                    </Button>
                                 )}
                             </div>
-                        </Card>
+                        </div>
                     )}
 
-                    <OrnamentalDivider variant="dot" />
-
-                    {/* Recent projects */}
                     <div>
-                        <div className="mb-5 flex items-center justify-between">
-                            <Heading level="h2" className="text-xl text-journal-ink">My Recent Projects</Heading>
-                            <Link href="/profile" className="font-serif text-sm text-journal-burgundy hover:underline flex items-center gap-1">
-                                View all <Icon icon="mdi:arrow-right" />
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-base font-medium text-stone-900">My recent projects</h2>
+                            <Link href="/profile" className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900">
+                                View all <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
                         {recentProjects.length === 0 ? (
-                            <Card className="p-12 text-center space-y-4">
-                                <Icon icon="mdi:folder-outline" className="text-5xl text-journal-sepia mx-auto" />
-                                <Text className="font-medium">No projects yet</Text>
-                                <Link href="/projects/create">
-                                    <Button size="sm" className="gap-1.5 mt-1">
-                                        <Icon icon="mdi:plus" />Create your first project
-                                    </Button>
-                                </Link>
-                            </Card>
+                            <div className="rounded-xl border border-stone-200 bg-white px-6 py-12 text-center">
+                                <Folder className="mx-auto h-8 w-8 text-stone-300" />
+                                <p className="mt-3 text-sm font-medium text-stone-900">No projects yet</p>
+                                <p className="mt-1 text-[13px] text-stone-500">Create your first project to get started.</p>
+                                <Button asChild size="sm" className="mt-4">
+                                    <Link href="/projects/create">
+                                        <Plus /> Create your first project
+                                    </Link>
+                                </Button>
+                            </div>
                         ) : (
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {recentProjects.map((p) => <ProjectCard key={p.id} project={p} />)}
                             </div>
                         )}

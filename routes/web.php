@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\AcademicCycleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CohortImportController;
-use App\Http\Controllers\InviteActivationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\InviteActivationController;
+use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReactionController;
@@ -175,6 +178,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/projects/{project}/reopen', [SubmissionController::class, 'reopen']);
         Route::get('/projects/{project}/submissions', [SubmissionController::class, 'index']);
         Route::post('/submissions/{submission}/review', [SubmissionController::class, 'review']);
+
+        // ── Phase 2: assessment (rubric, examiner, logbook, defense) ──
+        Route::get('/projects/{project}/evaluation', [EvaluationController::class, 'show']);
+        Route::post('/projects/{project}/assign-examiner', [EvaluationController::class, 'assignExaminer']);
+        Route::post('/projects/{project}/resolve-evaluation', [EvaluationController::class, 'resolveEvaluation']);
+        Route::post('/projects/{project}/publish', [EvaluationController::class, 'publish']);
+        Route::post('/projects/{project}/unpublish', [EvaluationController::class, 'unpublish']);
+        Route::post('/projects/{project}/reassign-supervisor', [EvaluationController::class, 'reassignSupervisor']);
+        Route::get('/examiner/queue', [EvaluationController::class, 'queue']);
+        Route::get('/projects/{project}/logbook', [LogbookController::class, 'index']);
+        Route::post('/projects/{project}/logbook', [LogbookController::class, 'store']);
+        Route::get('/projects/{project}/defense', [EvaluationController::class, 'defenses']);
+        Route::post('/projects/{project}/defense', [EvaluationController::class, 'storeDefense']);
+
+        // ── Phase 2: cycle export, department board, audit log reads ──
+        Route::get('/cycles/{cycle}/export', [AcademicCycleController::class, 'export']);
+        Route::get('/department/board', [AcademicCycleController::class, 'board']);
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
 
         // Supervisor
         Route::middleware('role:supervisor')->prefix('supervisor')->group(function () {

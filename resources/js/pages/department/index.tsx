@@ -24,6 +24,91 @@ type Cycle = {
     status: string;
 };
 
+type BoardProject = {
+    id: number;
+    title: string;
+    status: string;
+    stage: string;
+    teamLeaderName?: string | null;
+    supervisorName?: string | null;
+    examinerName?: string | null;
+    evaluationConflict?: boolean;
+    waitingDays?: number | null;
+    waitingOver7Days?: boolean;
+};
+
+type BoardData = {
+    counts: Record<string, number>;
+    total: number;
+    projects: BoardProject[];
+};
+
+/** Phase 2 department board: status counts + per-project waiting time. */
+function BoardSection({ cycles }: { cycles: Cycle[] }) {
+    const [cycleId, setCycleId] = useState<string>('');
+
+    const { data: board } = useQuery<BoardData>({
+        queryKey: ['department-board', cycleId],
+        queryFn: () =>
+            api
+                .get('/department/board', { params: cycleId ? { cycle_id: parseInt(cycleId) } : {} })
+                .then((r) => r.data),
+    });
+
+    const countEntries = Object.entries(board?.counts ?? {}).filter(([, n]) => n > 0);
+
+    return (
+        <section className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-base font-medium">Board</h2>
+                <Select value={cycleId || 'all'} onValueChange={(v) => setCycleId(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="w-56">
+                        <SelectValue placeholder="All cycles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All cycles</SelectItem>
+                        {cycles.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)}>
+                                {c.academic_year} · {c.semester}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">{board?.total ?? 0} project(s)</span>
+            </div>
+
+            {countEntries.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {countEntries.map(([status, n]) => (
+                        <Badge key={status} variant="secondary">
+                            {status.replace(/_/g, ' ')}: {n}
+                        </Badge>
+                    ))}
+                </div>
+            )}
+
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+                {(board?.projects ?? []).length === 0 && (
+                    <p className="px-4 py-3 text-sm text-muted-foreground">No projects match.</p>
+                )}
+                {(board?.projects ?? []).map((p, i) => (
+                    <div key={p.id} className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm ${i > 0 ? 'border-t border-border' : ''}`}>
+                        <span className="font-medium">{p.title}</span>
+                        <Badge variant="outline">{p.status.replace(/_/g, ' ')}</Badge>
+                        <span className="text-muted-foreground">Stage: {p.stage.replace(/_/g, ' ')}</span>
+                        {p.supervisorName && <span className="text-muted-foreground">Supervisor: {p.supervisorName}</span>}
+                        {p.waitingDays != null && (
+                            <span className="text-muted-foreground">Waiting {p.waitingDays} day(s)</span>
+                        )}
+                        {p.waitingOver7Days && <Badge variant="destructive">Waiting over 7 days</Badge>}
+                        {p.evaluationConflict && <Badge variant="destructive">Evaluation conflict</Badge>}
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
 type ImportError = { row?: number; line?: number; message?: string; [key: string]: unknown };
 type ImportPreview = {
     type: string;
@@ -67,6 +152,7 @@ export default function Department() {
     const createCycle = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreating(true);
+
         try {
             await api.post(`${base}/cycles`, {
                 department_id: parseInt(form.department_id),
@@ -111,13 +197,21 @@ export default function Department() {
     const buildFormData = () => {
         const fd = new FormData();
         fd.append('type', importType);
-        if (importFile) fd.append('file', importFile);
+
+        if (importFile) {
+fd.append('file', importFile);
+}
+
         return fd;
     };
 
     const doPreview = async () => {
-        if (!importFile) return toast.error('Choose a CSV file first');
+        if (!importFile) {
+return toast.error('Choose a CSV file first');
+}
+
         setImportBusy('preview');
+
         try {
             const res = await api.post(`${base}/import/preview`, buildFormData(), { headers: { 'Content-Type': 'multipart/form-data' } });
             setPreview(res.data);
@@ -130,8 +224,12 @@ export default function Department() {
     };
 
     const doConfirm = async () => {
-        if (!importFile) return toast.error('Choose a CSV file first');
+        if (!importFile) {
+return toast.error('Choose a CSV file first');
+}
+
         setImportBusy('confirm');
+
         try {
             const res = await api.post(`${base}/import/confirm`, buildFormData(), { headers: { 'Content-Type': 'multipart/form-data' } });
             toast.success(res.data?.message ?? 'Import complete');
@@ -139,7 +237,11 @@ export default function Department() {
             setImportFile(null);
         } catch (err: any) {
             const data = err?.response?.data;
-            if (data?.errors) setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.errors.length, errors: data.errors });
+
+            if (data?.errors) {
+setPreview({ type: importType, totalRows: 0, validRows: 0, errorRows: data.errors.length, errors: data.errors });
+}
+
             toast.error(data?.message ?? 'Import failed');
         } finally {
             setImportBusy(null);
@@ -171,6 +273,11 @@ export default function Department() {
                                 </span>
                                 <span className="ml-auto flex items-center gap-2">
                                     <Badge variant="secondary">{c.status}</Badge>
+                                    <a href={`/api/cycles/${c.id}/export?format=csv`}>
+                                        <Button size="sm" variant="outline" type="button">
+                                            Export CSV
+                                        </Button>
+                                    </a>
                                     {c.status !== 'closed' && c.status !== 'archived' && (
                                         <Button size="sm" variant="outline" onClick={() => closeCycle(c.id)}>
                                             Close
@@ -181,6 +288,8 @@ export default function Department() {
                         ))}
                     </div>
                 </section>
+
+                <BoardSection cycles={cycles ?? []} />
 
                 <section className="space-y-4 rounded-xl border border-border bg-card p-5">
                     <h2 className="text-base font-medium">Create cycle</h2>
@@ -292,7 +401,9 @@ export default function Department() {
                     <div className="flex flex-wrap items-end gap-3">
                         <div className="space-y-1.5">
                             <Label>Type</Label>
-                            <Select value={importType} onValueChange={(v) => { setImportType(v as 'students' | 'supervisors'); setPreview(null); }}>
+                            <Select value={importType} onValueChange={(v) => {
+ setImportType(v as 'students' | 'supervisors'); setPreview(null); 
+}}>
                                 <SelectTrigger className="w-44">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -304,7 +415,9 @@ export default function Department() {
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="import-file">CSV file</Label>
-                            <Input id="import-file" type="file" accept=".csv" onChange={(e) => { setImportFile(e.target.files?.[0] ?? null); setPreview(null); }} />
+                            <Input id="import-file" type="file" accept=".csv" onChange={(e) => {
+ setImportFile(e.target.files?.[0] ?? null); setPreview(null); 
+}} />
                         </div>
                         <Button variant="outline" onClick={doPreview} disabled={importBusy !== null}>
                             {importBusy === 'preview' ? 'Checking...' : 'Preview'}

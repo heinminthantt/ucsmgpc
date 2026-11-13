@@ -21,18 +21,37 @@ interface SubmissionItem {
     reviews?: unknown[];
 }
 
+interface RubricCriterion {
+    key: string;
+    label: string;
+    weight: number;
+    max: number;
+}
+
+interface EvaluationInfo {
+    examinerId?: number | null;
+    rubricTemplate?: { criteria: RubricCriterion[]; passThreshold: number };
+    defense?: { scheduledAt?: string; venue?: string | null } | null;
+}
+
 /**
  * Stage review panel (Phase 1).
  * Loads a project's submissions on demand, picks the latest one still in
  * 'submitted' status, and posts a review decision for it.
  */
 function StageReviewPanel({ projectId, onReviewed }: { projectId: number; onReviewed: () => void }) {
+    const { data: me } = useMe();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
     const [comment, setComment] = useState('');
     const [reviewing, setReviewing] = useState(false);
+    // Phase 2: rubric scores for final submissions + defense record form.
+    const [evaluation, setEvaluation] = useState<EvaluationInfo | null>(null);
+    const [scores, setScores] = useState<Record<string, string>>({});
+    const [defense, setDefense] = useState({ scheduled_at: '', venue: '', note: '' });
+    const [savingDefense, setSavingDefense] = useState(false);
 
     const loadSubmissions = async () => {
         setLoading(true);
@@ -50,11 +69,47 @@ function StageReviewPanel({ projectId, onReviewed }: { projectId: number; onRevi
         } finally {
             setLoading(false);
         }
+
+        try {
+            const ev = await api.get(`/projects/${projectId}/evaluation`);
+            setEvaluation(ev.data);
+        } catch {
+            setEvaluation(null);
+        }
     };
 
     const handleOpen = () => {
         setOpen(true);
         loadSubmissions();
+    };
+
+    // Defense records may be created by the assigned examiner, a dept
+    // admin or an admin (server enforces it too).
+    const canRecordDefense = !!me && !!evaluation
+        && (me.role === 'ADMIN' || me.role === 'DEPARTMENT_ADMIN' || me.id === evaluation.examinerId);
+
+    const saveDefense = async () => {
+        if (!defense.scheduled_at) {
+            toast.error('Pick a date and time for the defense.');
+
+            return;
+        }
+
+        setSavingDefense(true);
+
+        try {
+            await api.post(`/projects/${projectId}/defense`, {
+                scheduled_at: defense.scheduled_at,
+                venue: defense.venue.trim() || null,
+                note: defense.note.trim() || null,
+            });
+            toast.success('Defense recorded.');
+            loadSubmissions();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message ?? 'Could not record the defense');
+        } finally {
+            setSavingDefense(false);
+        }
     };
 
     // Highest id is the most recently created submission.
@@ -76,9 +131,16 @@ return;
         setReviewing(true);
 
         try {
+            const scoreEntries = latest.stage === 'final'
+                ? Object.entries(scores)
+                    .filter(([, v]) => v !== '')
+                    .map(([criterion_key, v]) => ({ criterion_key, score: Number(v) }))
+                : [];
+
             await api.post(`/submissions/${latest.id}/review`, {
                 decision,
                 ...(comment.trim() ? { comment: comment.trim() } : {}),
+                ...(scoreEntries.length ? { scores: scoreEntries } : {}),
             });
             toast.success(
                 decision === 'accept'
@@ -139,6 +201,32 @@ return;
                         )}
                     </div>
 
+                    {latest.stage === 'final' && (evaluation?.rubricTemplate?.criteria ?? []).length > 0 && (
+                        <div className="space-y-2 rounded-lg border border-stone-200 bg-white p-3">
+                            <p className="text-[13px] font-medium text-stone-900">
+                                Rubric scores (pass at {evaluation?.rubricTemplate?.passThreshold ?? 50})
+                            </p>
+                            {(evaluation?.rubricTemplate?.criteria ?? []).map((c) => (
+                                <label key={c.key} className="flex items-center justify-between gap-3 text-[13px] text-stone-600">
+                                    <span>
+                                        {c.label} <span className="text-stone-400">({c.weight}%)</span>
+                                    </span>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={c.max}
+                                        className="w-20 rounded-lg border border-stone-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                        value={scores[c.key] ?? ''}
+                                        onChange={(e) => setScores((p) => ({ ...p, [c.key]: e.target.value }))}
+                                    />
+                                </label>
+                            ))}
+                            <p className="text-xs text-stone-400">
+                                With an examiner assigned, the result is confirmed only when both of you have reviewed.
+                            </p>
+                        </div>
+                    )}
+
                     <textarea
                         rows={3}
                         className="w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
@@ -158,6 +246,41 @@ return;
                             Decline
                         </Button>
                     </div>
+
+                    {canRecordDefense && (
+                        <div className="space-y-2 border-t border-stone-200 pt-3">
+                            <p className="text-[13px] font-medium text-stone-900">Defense</p>
+                            {evaluation?.defense && (
+                                <p className="text-[13px] text-stone-500">
+                                    Scheduled: {evaluation.defense.scheduledAt ? new Date(evaluation.defense.scheduledAt).toLocaleString() : ''}
+                                    {evaluation.defense.venue ? ` · ${evaluation.defense.venue}` : ''}
+                                </p>
+                            )}
+                            <input
+                                type="datetime-local"
+                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                value={defense.scheduled_at}
+                                onChange={(e) => setDefense((p) => ({ ...p, scheduled_at: e.target.value }))}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Venue (optional)"
+                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                value={defense.venue}
+                                onChange={(e) => setDefense((p) => ({ ...p, venue: e.target.value }))}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Note (optional)"
+                                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-300"
+                                value={defense.note}
+                                onChange={(e) => setDefense((p) => ({ ...p, note: e.target.value }))}
+                            />
+                            <Button type="button" size="sm" variant="outline" disabled={savingDefense} onClick={saveDefense}>
+                                {savingDefense ? 'Saving...' : 'Record defense'}
+                            </Button>
+                        </div>
+                    )}
                 </>
             )}
         </div>

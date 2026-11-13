@@ -33,7 +33,11 @@ class ProjectLifecycle
         'final_submitted' => ['under_evaluation'],
         'under_evaluation' => ['revision_required', 'approved_published', 'not_passed'],
         'revision_required' => ['final_submitted'],
-        'approved_published' => ['archived'],
+        // Phase 2 manual override (spec 6.9): a dept admin/admin may
+        // unpublish, which returns the project to under_evaluation (result
+        // no longer confirmed, hidden from the catalog) until it is
+        // re-published through the publish endpoint. Always audit logged.
+        'approved_published' => ['archived', 'under_evaluation'],
         'not_passed' => [],
         'archived' => [],
     ];

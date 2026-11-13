@@ -37,11 +37,13 @@ class Project extends Model
         'examiner_id',
         'status',
         'published_at',
+        'evaluation_conflict',
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
+        'evaluation_conflict' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -105,6 +107,30 @@ class Project extends Model
         return $this->hasMany(Submission::class)->latest();
     }
 
+    /** @return HasMany<LogbookEntry, $this> */
+    public function logbookEntries(): HasMany
+    {
+        return $this->hasMany(LogbookEntry::class)->latest();
+    }
+
+    /** @return HasMany<DefenseRecord, $this> */
+    public function defenseRecords(): HasMany
+    {
+        return $this->hasMany(DefenseRecord::class)->latest();
+    }
+
+    /** The rubric template that applies to this project (via its cycle). */
+    public function rubricTemplate(): ?RubricTemplate
+    {
+        return $this->cycle?->rubricTemplate ?? RubricTemplate::defaultTemplate();
+    }
+
+    /** True once a final result exists (students may then see their scores, spec D9). */
+    public function resultIsConfirmed(): bool
+    {
+        return in_array($this->status, ['approved_published', 'revision_required', 'not_passed'], true);
+    }
+
     /** True once the project has passed and is in the public catalog. */
     public function isPublished(): bool
     {
@@ -118,7 +144,7 @@ class Project extends Model
         if ($this->isPublished()) {
             return true;
         }
-        if (!$user) {
+        if (! $user) {
             return false;
         }
         if ($user->isAdmin() || $this->user_id === $user->id
@@ -135,6 +161,7 @@ class Project extends Model
                 ->where('invite_status', 'confirmed')
                 ->exists();
         }
+
         return false;
     }
 

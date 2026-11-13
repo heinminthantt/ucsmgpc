@@ -4,7 +4,7 @@ export interface User {
     email: string;
     avatar_url?: string;
     bio?: string;
-    role: 'USER' | 'SUPERVISOR' | 'ADMIN';
+    role: 'USER' | 'SUPERVISOR' | 'ADMIN' | 'DEPARTMENT_ADMIN';
     is_active?: boolean;
 }
 

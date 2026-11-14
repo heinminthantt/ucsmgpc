@@ -23,6 +23,7 @@
     "APP_URL": "https://ucsmgpc.vercel.app"
   },
   "framework": null,
+  "outputDirectory": "public",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.8.0"
@@ -30,12 +31,16 @@
   },
   "routes": [
     {
-      "dest": "/public/build/$1",
-      "src": "/build/(.*)"
+      "src": "/build/(.*)",
+      "dest": "/build/$1"
     },
     {
-      "dest": "/api/index.php",
-      "src": "/(.*)"
+      "src": "/(favicon\\.ico|robots\\.txt)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
     }
   ],
   "version": 2

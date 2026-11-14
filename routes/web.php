@@ -19,6 +19,8 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // Welcome / landing
@@ -229,6 +231,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/projects/{project}/reject', [SupervisorController::class, 'reject']);
         });
     });
+});
+
+// Vercel Cron target for the daily deadline reminders (there is no scheduler
+// process on serverless). Vercel sends the CRON_SECRET env var as a Bearer
+// token; reject anything else.
+Route::get('/cron/reminders', function (Request $request) {
+    $secret = (string) env('CRON_SECRET');
+    abort_if($secret === '' || ! hash_equals($secret, (string) $request->bearerToken()), 403);
+    Artisan::call('reminders:send');
+
+    return response('ok');
 });
 
 require __DIR__.'/settings.php';

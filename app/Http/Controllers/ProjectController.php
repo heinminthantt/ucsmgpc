@@ -31,10 +31,19 @@ class ProjectController extends Controller
     {
         $query = Project::with(['user', 'department', 'course', 'supervisor', 'tags', 'files'])->withCount('reactions')->approved();
 
-        // Keyword search
+        // Keyword search. Full-text is MySQL-only; other drivers (PostgreSQL
+        // on Neon, SQLite in tests) fall back to a LIKE match per column.
         if ($request->filled('keyword')) {
             $kw = $request->keyword;
-            $query->whereFullText(['title', 'description', 'body', 'objectives'], $kw);
+            if ($query->getConnection()->getDriverName() === 'mysql') {
+                $query->whereFullText(['title', 'description', 'body', 'objectives'], $kw);
+            } else {
+                $query->where(function ($q) use ($kw) {
+                    foreach (['title', 'description', 'body', 'objectives'] as $col) {
+                        $q->orWhere($col, 'like', '%'.$kw.'%');
+                    }
+                });
+            }
         }
 
         if ($request->filled('departmentId')) {

@@ -90,7 +90,7 @@ test('proposal submission queues a notification email to the supervisor', functi
     $project = hardeningProject($dept, $cycle, $supervisor, 'UCS-100', 'Mail Project');
     $leader = $project->user;
 
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'proposal'])
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'proposal'])
         ->assertCreated();
 
     Mail::assertQueued(ProjectNotificationMail::class, fn ($mail) => $mail->hasTo($supervisor->email));
@@ -108,7 +108,7 @@ test('imported user activates the account through the invite token', function ()
     $csv = UploadedFile::fake()->createWithContent('students.csv',
         "roll_number,name,email,department,student_year\n".
         "UCS-200,Invite Me,invite@example.com,Computer Science,Final Year\n");
-    $this->actingAs($admin)->postJson('/api/admin/import/confirm', ['type' => 'students', 'file' => $csv, 'cohort_year' => 2026])
+    $this->actingAs($admin)->postJson('/data/admin/import/confirm', ['type' => 'students', 'file' => $csv, 'cohort_year' => 2026])
         ->assertCreated()
         ->assertJsonPath('created', 1)
         ->assertJsonPath('invites_sent', 1);
@@ -176,7 +176,7 @@ test('supervisor capacity blocks a second proposal accept, admin can override', 
     $second = hardeningProject($dept, $cycle, $supervisor, 'UCS-301', 'Second Project');
 
     foreach ([$first, $second] as $project) {
-        $this->actingAs($project->user)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'proposal'])
+        $this->actingAs($project->user)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'proposal'])
             ->assertCreated();
     }
 
@@ -184,18 +184,18 @@ test('supervisor capacity blocks a second proposal accept, admin can override', 
     $sub2 = Submission::where('project_id', $second->id)->where('stage', 'proposal')->first();
 
     // First accept fills the single capacity slot.
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$sub1->id}/review", ['decision' => 'accept'])
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$sub1->id}/review", ['decision' => 'accept'])
         ->assertOk();
     expect($first->refresh()->status)->toBe('in_progress');
 
     // Second accept by the supervisor is blocked with a clear 422.
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$sub2->id}/review", ['decision' => 'accept'])
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$sub2->id}/review", ['decision' => 'accept'])
         ->assertStatus(422)
         ->assertJsonPath('message', fn ($m) => str_contains($m, 'capacity'));
     expect($second->refresh()->status)->toBe('proposal_submitted');
 
     // A system admin reviewing the same submission is the override path.
-    $this->actingAs($admin)->postJson("/api/submissions/{$sub2->id}/review", ['decision' => 'accept'])
+    $this->actingAs($admin)->postJson("/data/submissions/{$sub2->id}/review", ['decision' => 'accept'])
         ->assertOk();
     expect($second->refresh()->status)->toBe('in_progress');
 });

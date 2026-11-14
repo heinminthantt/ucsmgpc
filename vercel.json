@@ -35,7 +35,15 @@
       "dest": "/build/$1"
     },
     {
-      "src": "/(favicon\\.ico|robots\\.txt)",
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
+      "src": "/fonts/(.*)",
+      "dest": "/fonts/$1"
+    },
+    {
+      "src": "/(favicon\\.ico|favicon\\.png|apple-touch-icon\\.png|ucsmgy\\.png|images\\.png|robots\\.txt)",
       "dest": "/$1"
     },
     {

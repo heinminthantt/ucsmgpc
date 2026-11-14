@@ -19,7 +19,8 @@
     "QUEUE_CONNECTION": "sync",
     "SESSION_DRIVER": "database",
     "VIEW_COMPILED_PATH": "/tmp/views",
-    "DB_CONNECTION": "pgsql"
+    "DB_CONNECTION": "pgsql",
+    "APP_URL": "https://ucsmgpc.vercel.app"
   },
   "framework": null,
   "functions": {

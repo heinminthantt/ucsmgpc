@@ -58,33 +58,33 @@ test('featured toggle: scope rules, published-only rule, audit, catalog order', 
     ]);
 
     // Students and other departments cannot feature.
-    $this->actingAs($student)->postJson("/api/projects/{$older->id}/feature", ['is_featured' => true])->assertForbidden();
-    $this->actingAs($otherDeptAdmin)->postJson("/api/projects/{$older->id}/feature", ['is_featured' => true])->assertForbidden();
+    $this->actingAs($student)->postJson("/data/projects/{$older->id}/feature", ['is_featured' => true])->assertForbidden();
+    $this->actingAs($otherDeptAdmin)->postJson("/data/projects/{$older->id}/feature", ['is_featured' => true])->assertForbidden();
 
     // Unpublished projects cannot be featured.
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$draft->id}/feature", ['is_featured' => true])
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$draft->id}/feature", ['is_featured' => true])
         ->assertStatus(422);
     expect($draft->refresh()->is_featured)->toBeFalse();
 
     // Dept admin features the older published project; audited.
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$older->id}/feature", ['is_featured' => true])
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$older->id}/feature", ['is_featured' => true])
         ->assertOk()->assertJsonPath('isFeatured', true);
     expect(AuditLog::where('action', 'project.featured')->where('subject_id', $older->id)->exists())->toBeTrue();
 
     // Featured projects sort first in the public catalog search.
-    $content = $this->getJson('/api/projects/search')->assertOk()->json('content');
+    $content = $this->getJson('/data/projects/search')->assertOk()->json('content');
     expect($content[0]['id'])->toBe($older->id)
         ->and($content[0]['isFeatured'])->toBeTrue()
         ->and($content[0]['publishedAt'])->not->toBeNull();
 
     // Featured-only filter used by the catalog Featured section.
-    $featured = $this->getJson('/api/projects/search?featured=1')->json('content');
+    $featured = $this->getJson('/data/projects/search?featured=1')->json('content');
     expect(collect($featured)->pluck('id')->all())->toBe([$older->id]);
 
     // Semester filter matches cycle semester and legacy student_year alike.
-    $bySemester = $this->getJson('/api/projects/search?semester='.urlencode('Semester VI'))->json('content');
+    $bySemester = $this->getJson('/data/projects/search?semester='.urlencode('Semester VI'))->json('content');
     expect($bySemester)->toBeArray();
-    $this->actingAs($admin)->postJson("/api/projects/{$older->id}/feature", ['is_featured' => false])->assertOk();
+    $this->actingAs($admin)->postJson("/data/projects/{$older->id}/feature", ['is_featured' => false])->assertOk();
 });
 
 test('public department and supervisor pages show published work only, no private data', function () {
@@ -158,18 +158,18 @@ test('demo video URLs: only YouTube and Vimeo are accepted, embeds are derived s
         'department_id' => $dept->id, 'course_id' => $course->id,
     ];
 
-    $this->actingAs($owner)->putJson("/api/projects/{$project->id}", [
+    $this->actingAs($owner)->putJson("/data/projects/{$project->id}", [
         ...$payload, 'demo_video_url' => 'https://example.com/watch?v=1',
     ])->assertStatus(422)->assertJsonValidationErrors('demo_video_url');
 
-    $this->actingAs($owner)->putJson("/api/projects/{$project->id}", [
+    $this->actingAs($owner)->putJson("/data/projects/{$project->id}", [
         ...$payload, 'demo_video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ])->assertOk();
     expect($project->refresh()->demo_video_url)->toContain('youtube.com');
 
     $project->update(['status' => 'approved_published', 'approval_status' => 'approved', 'published_at' => now()]);
 
-    $shown = $this->getJson("/api/projects/{$project->id}")->assertOk();
+    $shown = $this->getJson("/data/projects/{$project->id}")->assertOk();
     expect($shown->json('demoVideoEmbedUrl'))->toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
 });
 
@@ -194,32 +194,32 @@ test('github link: bad format rejected, confirmed 404 blocks, network failure do
     ]);
 
     // Wrong host / wrong shape: format error, rejected before any HTTP call.
-    $this->actingAs($owner)->postJson('/api/projects', [
+    $this->actingAs($owner)->postJson('/data/projects', [
         ...$payload, 'github_link' => 'https://gitlab.com/someone/repo',
     ])->assertStatus(422)->assertJsonValidationErrors('github_link');
 
     // Confirmed 404 blocks the save.
-    $this->actingAs($owner)->postJson('/api/projects', [
+    $this->actingAs($owner)->postJson('/data/projects', [
         ...$payload, 'github_link' => 'https://github.com/someone/missing-repo',
     ])->assertStatus(422)->assertJsonValidationErrors('github_link');
     expect(Project::where('title', 'Repo project')->exists())->toBeFalse();
 
     // Network failure (timeout): save proceeds, link stays unverified.
-    $created = $this->actingAs($owner)->postJson('/api/projects', [
+    $created = $this->actingAs($owner)->postJson('/data/projects', [
         ...$payload, 'github_link' => 'https://github.com/someone/offline-repo',
     ])->assertCreated();
     $offline = Project::find($created->json('id'));
     expect($offline->github_verified_at)->toBeNull();
 
     // Reachable repo: save proceeds and the link is stamped verified.
-    $created2 = $this->actingAs($owner)->postJson('/api/projects', [
+    $created2 = $this->actingAs($owner)->postJson('/data/projects', [
         ...$payload, 'title' => 'Repo project 2', 'github_link' => 'https://github.com/someone/real-repo',
     ])->assertCreated();
     $verified = Project::find($created2->json('id'));
     expect($verified->github_verified_at)->not->toBeNull();
 
     // Changing the link clears the stamp until the new one verifies.
-    $this->actingAs($owner)->putJson("/api/projects/{$verified->id}", [
+    $this->actingAs($owner)->putJson("/data/projects/{$verified->id}", [
         ...$payload, 'github_link' => 'https://github.com/someone/other-repo',
     ])->assertOk();
     expect($verified->refresh()->github_verified_at)->toBeNull();
@@ -278,9 +278,9 @@ test('department analytics returns the main numbers and is staff only', function
         'status' => 'not_passed', 'approval_status' => 'rejected', 'published_at' => null,
     ]);
 
-    $this->actingAs($student)->getJson('/api/department/analytics')->assertForbidden();
+    $this->actingAs($student)->getJson('/data/department/analytics')->assertForbidden();
 
-    $data = $this->actingAs($deptAdmin)->getJson("/api/department/analytics?cycle_id={$cycle->id}")
+    $data = $this->actingAs($deptAdmin)->getJson("/data/department/analytics?cycle_id={$cycle->id}")
         ->assertOk()
         ->assertJsonPath('totalProjects', 3)
         ->assertJsonPath('passRate', 66.7)
@@ -295,11 +295,11 @@ test('locale endpoint persists and the en/my dictionaries have identical keys', 
     $user = User::factory()->create();
     expect($user->refresh()->locale)->toBe('en');
 
-    $this->actingAs($user)->patchJson('/api/me/locale', ['locale' => 'my'])
+    $this->actingAs($user)->patchJson('/data/me/locale', ['locale' => 'my'])
         ->assertOk()->assertJsonPath('locale', 'my');
     expect($user->refresh()->locale)->toBe('my');
 
-    $this->actingAs($user)->patchJson('/api/me/locale', ['locale' => 'fr'])
+    $this->actingAs($user)->patchJson('/data/me/locale', ['locale' => 'fr'])
         ->assertStatus(422);
 
     $en = json_decode(file_get_contents(base_path('resources/js/i18n/en.json')), true);
@@ -322,28 +322,28 @@ test('rubric template CRUD: validation and role gates', function () {
         ],
     ];
 
-    $this->actingAs($student)->postJson('/api/rubric-templates', $valid)->assertForbidden();
-    $this->actingAs($student)->getJson('/api/rubric-templates')->assertForbidden();
+    $this->actingAs($student)->postJson('/data/rubric-templates', $valid)->assertForbidden();
+    $this->actingAs($student)->getJson('/data/rubric-templates')->assertForbidden();
 
-    $created = $this->actingAs($deptAdmin)->postJson('/api/rubric-templates', $valid)
+    $created = $this->actingAs($deptAdmin)->postJson('/data/rubric-templates', $valid)
         ->assertCreated()->assertJsonPath('name', 'Department rubric 2027');
 
     // Zero weight and zero max are rejected.
-    $this->actingAs($deptAdmin)->postJson('/api/rubric-templates', [
+    $this->actingAs($deptAdmin)->postJson('/data/rubric-templates', [
         ...$valid, 'name' => 'Bad one',
         'criteria' => [['key' => 'x', 'label' => 'X', 'weight' => 0, 'max' => 100]],
     ])->assertStatus(422);
-    $this->actingAs($deptAdmin)->postJson('/api/rubric-templates', [
+    $this->actingAs($deptAdmin)->postJson('/data/rubric-templates', [
         ...$valid, 'name' => 'Bad two',
         'criteria' => [['key' => 'x', 'label' => 'X', 'weight' => 10, 'max' => 0]],
     ])->assertStatus(422);
 
     $id = $created->json('id');
-    $this->actingAs($deptAdmin)->putJson("/api/rubric-templates/{$id}", [
+    $this->actingAs($deptAdmin)->putJson("/data/rubric-templates/{$id}", [
         ...$valid, 'name' => 'Department rubric 2027 v2',
     ])->assertOk()->assertJsonPath('name', 'Department rubric 2027 v2');
 
-    $list = $this->actingAs($deptAdmin)->getJson('/api/rubric-templates')->assertOk()->json();
+    $list = $this->actingAs($deptAdmin)->getJson('/data/rubric-templates')->assertOk()->json();
     expect(collect($list)->pluck('id'))->toContain($id);
     expect(AuditLog::where('action', 'rubric_template.created')->exists())->toBeTrue();
 });
@@ -354,12 +354,12 @@ test('audit log endpoint stays restricted to dept admins and admins', function (
     $student = User::factory()->create(['department_id' => $dept->id]);
     $supervisor = User::factory()->create(['role' => 'supervisor', 'department_id' => $dept->id]);
 
-    $this->actingAs($student)->getJson('/api/audit-logs')->assertForbidden();
-    $this->actingAs($supervisor)->getJson('/api/audit-logs')->assertForbidden();
-    $this->actingAs($deptAdmin)->getJson('/api/audit-logs')->assertOk();
+    $this->actingAs($student)->getJson('/data/audit-logs')->assertForbidden();
+    $this->actingAs($supervisor)->getJson('/data/audit-logs')->assertForbidden();
+    $this->actingAs($deptAdmin)->getJson('/data/audit-logs')->assertOk();
 
     // The examiner queue endpoint answers for assigned examiners.
     $project = phase3Published($dept, $student, ['examiner_id' => $supervisor->id, 'status' => 'final_submitted', 'approval_status' => 'pending']);
-    $queue = $this->actingAs($supervisor)->getJson('/api/examiner/queue')->assertOk()->json();
+    $queue = $this->actingAs($supervisor)->getJson('/data/examiner/queue')->assertOk()->json();
     expect(collect($queue)->pluck('id'))->toContain($project->id);
 });

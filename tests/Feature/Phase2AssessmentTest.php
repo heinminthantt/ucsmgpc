@@ -72,12 +72,12 @@ function phase2Project(Department $dept, AcademicCycle $cycle, User $supervisor,
 /** Drive a draft project through proposal acceptance to a submitted final. Returns the final Submission. */
 function phase2DriveToFinal($test, Project $project, User $leader, User $supervisor): Submission
 {
-    $test->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'proposal'])->assertCreated();
+    $test->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'proposal'])->assertCreated();
     $proposal = Submission::where('project_id', $project->id)->where('stage', 'proposal')->latest('id')->first();
-    $test->actingAs($supervisor)->postJson("/api/submissions/{$proposal->id}/review", ['decision' => 'accept'])->assertOk();
+    $test->actingAs($supervisor)->postJson("/data/submissions/{$proposal->id}/review", ['decision' => 'accept'])->assertOk();
     expect($project->refresh()->status)->toBe('in_progress');
 
-    $test->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'final'])->assertCreated();
+    $test->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'final'])->assertCreated();
 
     return Submission::where('project_id', $project->id)->where('stage', 'final')->latest('id')->first();
 }
@@ -117,7 +117,7 @@ test('creating a cycle without a template attaches the spec default rubric', fun
     $dept = phase2Department();
     $deptAdmin = User::factory()->create(['role' => 'department_admin', 'department_id' => $dept->id]);
 
-    $response = $this->actingAs($deptAdmin)->postJson('/api/department/cycles', [
+    $response = $this->actingAs($deptAdmin)->postJson('/data/department/cycles', [
         'department_id' => $dept->id,
         'academic_year' => '2026-2027',
         'semester' => 'Semester VI',
@@ -144,10 +144,10 @@ test('examiner confirm flow: supervisor pass alone does not publish, examiner co
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
 
     // Dept admin assigns the examiner; examiner is notified and queued.
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$project->id}/assign-examiner", ['examiner_id' => $examiner->id])
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$project->id}/assign-examiner", ['examiner_id' => $examiner->id])
         ->assertOk()->assertJsonPath('examinerId', $examiner->id);
     expect(ProjectNotification::where('recipient_user_id', $examiner->id)->where('notification_type', 'examiner_assigned')->exists())->toBeTrue();
-    $this->actingAs($examiner)->getJson('/api/examiner/queue')
+    $this->actingAs($examiner)->getJson('/data/examiner/queue')
         ->assertOk()->assertJsonFragment(['id' => $project->id]);
 
     // Supervisor passes with scores: result must NOT be confirmed yet.
@@ -158,7 +158,7 @@ test('examiner confirm flow: supervisor pass alone does not publish, examiner co
         ['criterion_key' => 'presentation_defense', 'score' => 60],
         ['criterion_key' => 'teamwork_process', 'score' => 100],
     ];
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'comment' => 'Strong work.', 'scores' => $scores,
     ])->assertOk()
         ->assertJsonPath('evaluation', 'pending_confirmation')
@@ -167,16 +167,16 @@ test('examiner confirm flow: supervisor pass alone does not publish, examiner co
         ->and($final->refresh()->status)->toBe('submitted');
 
     // Student cannot see the scores before confirmation (spec D9).
-    $history = $this->actingAs($leader)->getJson("/api/projects/{$project->id}/submissions")->assertOk()->json();
+    $history = $this->actingAs($leader)->getJson("/data/projects/{$project->id}/submissions")->assertOk()->json();
     $finalEntry = collect($history)->firstWhere('stage', 'final');
     expect($finalEntry['reviews'][0])->not->toHaveKey('scores');
 
-    $evaluation = $this->actingAs($leader)->getJson("/api/projects/{$project->id}/evaluation")->assertOk();
+    $evaluation = $this->actingAs($leader)->getJson("/data/projects/{$project->id}/evaluation")->assertOk();
     $evaluation->assertJsonPath('resultConfirmed', false);
     expect($evaluation->json('reviews.0.scores'))->toBeNull();
 
     // Examiner confirms the pass: now the project publishes.
-    $this->actingAs($examiner)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($examiner)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'comment' => 'Confirmed.', 'scores' => phase2FullScores(75),
     ])->assertOk()->assertJsonPath('evaluation', 'confirmed');
     expect($project->refresh()->status)->toBe('approved_published')
@@ -184,7 +184,7 @@ test('examiner confirm flow: supervisor pass alone does not publish, examiner co
         ->and($final->refresh()->status)->toBe('accepted');
 
     // After confirmation the student can see scores and totals.
-    $evaluation = $this->actingAs($leader)->getJson("/api/projects/{$project->id}/evaluation")->assertOk();
+    $evaluation = $this->actingAs($leader)->getJson("/data/projects/{$project->id}/evaluation")->assertOk();
     $evaluation->assertJsonPath('resultConfirmed', true);
     $supReview = collect($evaluation->json('reviews'))->firstWhere('reviewer_role', 'supervisor');
     expect($supReview['weightedTotal'])->toBe(79.5)
@@ -199,7 +199,7 @@ test('without an examiner the supervisor final decision stands alone', function 
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-202', 'Solo Decision Project');
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
 
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'scores' => phase2FullScores(66),
     ])->assertOk()->assertJsonPath('evaluation', 'confirmed');
     expect($project->refresh()->status)->toBe('approved_published');
@@ -213,12 +213,12 @@ test('rubric scores are validated against the template criteria and max', functi
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-203', 'Score Validation Project');
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
 
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass',
         'scores' => [['criterion_key' => 'implementation', 'score' => 101]],
     ])->assertStatus(422);
 
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass',
         'scores' => [['criterion_key' => 'not_a_criterion', 'score' => 10]],
     ])->assertStatus(422);
@@ -240,11 +240,11 @@ test('pass vs fail disagreement flags a conflict and a dept admin resolves it', 
     $project->update(['examiner_id' => $examiner->id]);
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
 
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'scores' => phase2FullScores(90),
     ])->assertOk()->assertJsonPath('evaluation', 'pending_confirmation');
 
-    $this->actingAs($examiner)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($examiner)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'fail', 'comment' => 'Not defensible.', 'scores' => phase2FullScores(20),
     ])->assertOk()->assertJsonPath('evaluation', 'conflict');
 
@@ -253,11 +253,11 @@ test('pass vs fail disagreement flags a conflict and a dept admin resolves it', 
         ->and(ProjectNotification::where('recipient_user_id', $deptAdmin->id)->where('notification_type', 'evaluation_conflict')->exists())->toBeTrue();
 
     // A plain student cannot resolve; the dept admin can.
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/resolve-evaluation", [
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/resolve-evaluation", [
         'result' => 'pass', 'comment' => 'Let it pass.',
     ])->assertForbidden();
 
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$project->id}/resolve-evaluation", [
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$project->id}/resolve-evaluation", [
         'result' => 'revision_required', 'comment' => 'Fix the report and resubmit.',
     ])->assertOk()->assertJsonPath('status', 'revision_required');
 
@@ -275,18 +275,18 @@ test('logbook is append-only for team members and hidden from other teams', func
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-205', 'Logbook Project');
     [, $otherLeader] = phase2Project($dept, $cycle, $supervisor, 'UCS-206', 'Other Team Project');
 
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/logbook", [
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/logbook", [
         'body' => 'Finished the database schema.', 'link' => 'https://github.com/example/x/commit/1',
     ])->assertCreated()->assertJsonPath('authorName', $leader->name);
 
-    $this->actingAs($leader)->getJson("/api/projects/{$project->id}/logbook")
+    $this->actingAs($leader)->getJson("/data/projects/{$project->id}/logbook")
         ->assertOk()->assertJsonCount(1)->assertJsonFragment(['body' => 'Finished the database schema.']);
 
-    $this->actingAs($supervisor)->getJson("/api/projects/{$project->id}/logbook")->assertOk()->assertJsonCount(1);
+    $this->actingAs($supervisor)->getJson("/data/projects/{$project->id}/logbook")->assertOk()->assertJsonCount(1);
 
     // Another team's student can neither read nor write.
-    $this->actingAs($otherLeader)->getJson("/api/projects/{$project->id}/logbook")->assertNotFound();
-    $this->actingAs($otherLeader)->postJson("/api/projects/{$project->id}/logbook", ['body' => 'Intrusion'])
+    $this->actingAs($otherLeader)->getJson("/data/projects/{$project->id}/logbook")->assertNotFound();
+    $this->actingAs($otherLeader)->postJson("/data/projects/{$project->id}/logbook", ['body' => 'Intrusion'])
         ->assertForbidden();
 });
 
@@ -299,15 +299,15 @@ test('mid-review flow: summary required, feedback required, returns to in_progre
     $cycle = phase2Cycle($dept, $admin);
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-207', 'Mid Review Project');
 
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'proposal'])->assertCreated();
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'proposal'])->assertCreated();
     $proposal = Submission::where('project_id', $project->id)->where('stage', 'proposal')->first();
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$proposal->id}/review", ['decision' => 'accept'])->assertOk();
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$proposal->id}/review", ['decision' => 'accept'])->assertOk();
 
     // No progress summary -> blocked by the mid checklist.
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", ['stage' => 'mid_review'])
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", ['stage' => 'mid_review'])
         ->assertStatus(422)->assertJsonFragment(['missing' => ['progress summary']]);
 
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/submit", [
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/submit", [
         'stage' => 'mid_review', 'payload' => ['progress_summary' => 'Prototype done, testing next.'],
     ])->assertCreated();
     expect($project->refresh()->status)->toBe('mid_review_submitted');
@@ -315,10 +315,10 @@ test('mid-review flow: summary required, feedback required, returns to in_progre
     $mid = Submission::where('project_id', $project->id)->where('stage', 'mid_review')->first();
 
     // Feedback is required even for an on-track accept.
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$mid->id}/review", ['decision' => 'accept'])
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$mid->id}/review", ['decision' => 'accept'])
         ->assertStatus(422);
 
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$mid->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$mid->id}/review", [
         'decision' => 'accept', 'comment' => 'On track.',
     ])->assertOk();
     expect($project->refresh()->status)->toBe('in_progress');
@@ -335,18 +335,18 @@ test('defense record can be created by the examiner and shows in the evaluation 
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-208', 'Defense Project');
     $project->update(['examiner_id' => $examiner->id]);
 
-    $this->actingAs($examiner)->postJson("/api/projects/{$project->id}/defense", [
+    $this->actingAs($examiner)->postJson("/data/projects/{$project->id}/defense", [
         'scheduled_at' => now()->addDays(5)->toDateTimeString(),
         'venue' => 'Room 204',
         'panel' => [$examiner->id, $supervisor->id],
         'note' => 'Bring printed reports.',
     ])->assertCreated()->assertJsonPath('venue', 'Room 204');
 
-    $this->actingAs($leader)->postJson("/api/projects/{$project->id}/defense", [
+    $this->actingAs($leader)->postJson("/data/projects/{$project->id}/defense", [
         'scheduled_at' => now()->addDays(6)->toDateTimeString(),
     ])->assertForbidden();
 
-    $this->actingAs($leader)->getJson("/api/projects/{$project->id}/evaluation")
+    $this->actingAs($leader)->getJson("/data/projects/{$project->id}/evaluation")
         ->assertOk()->assertJsonPath('defense.venue', 'Room 204');
 });
 
@@ -386,11 +386,11 @@ test('cycle export contains the project row and respects department scope', func
     $cycle = phase2Cycle($dept, $admin);
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-210', 'Exportable Project');
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'scores' => phase2FullScores(80),
     ])->assertOk();
 
-    $csv = $this->actingAs($deptAdmin)->get("/api/cycles/{$cycle->id}/export?format=csv")->assertOk();
+    $csv = $this->actingAs($deptAdmin)->get("/data/cycles/{$cycle->id}/export?format=csv")->assertOk();
     $content = $csv->streamedContent();
     expect($content)->toContain('Exportable Project')
         ->and($content)->toContain($leader->name)
@@ -398,10 +398,10 @@ test('cycle export contains the project row and respects department scope', func
         ->and($content)->toContain('80.00')
         ->and($content)->toContain('Pass (published)');
 
-    $json = $this->actingAs($deptAdmin)->getJson("/api/cycles/{$cycle->id}/export?format=json")->assertOk();
+    $json = $this->actingAs($deptAdmin)->getJson("/data/cycles/{$cycle->id}/export?format=json")->assertOk();
     expect($json->json('rows.0.Weighted rubric total'))->toBe('80.00');
 
-    $this->actingAs($otherAdmin)->getJson("/api/cycles/{$cycle->id}/export")->assertForbidden();
+    $this->actingAs($otherAdmin)->getJson("/data/cycles/{$cycle->id}/export")->assertForbidden();
 });
 
 test('department board returns counts and the project list', function () {
@@ -412,7 +412,7 @@ test('department board returns counts and the project list', function () {
     $cycle = phase2Cycle($dept, $admin);
     [$project] = phase2Project($dept, $cycle, $supervisor, 'UCS-211', 'Board Project');
 
-    $response = $this->actingAs($deptAdmin)->getJson("/api/department/board?cycle_id={$cycle->id}")->assertOk();
+    $response = $this->actingAs($deptAdmin)->getJson("/data/department/board?cycle_id={$cycle->id}")->assertOk();
     $response->assertJsonPath('total', 1)->assertJsonPath('counts.draft', 1);
     expect($response->json('projects.0.title'))->toBe('Board Project')
         ->and($response->json('projects.0.waitingOver7Days'))->toBeFalse();
@@ -424,14 +424,14 @@ test('role change writes an audit log row', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $student = User::factory()->create(['role' => 'user']);
 
-    $this->actingAs($admin)->putJson("/api/admin/users/{$student->id}/role", ['role' => 'supervisor'])->assertOk();
+    $this->actingAs($admin)->putJson("/data/admin/users/{$student->id}/role", ['role' => 'supervisor'])->assertOk();
 
     $log = AuditLog::where('action', 'user.role_changed')->where('subject_id', $student->id)->first();
     expect($log)->not->toBeNull()
         ->and($log->actor_id)->toBe($admin->id)
         ->and($log->meta_json['to'])->toBe('supervisor');
 
-    $this->actingAs($admin)->getJson('/api/audit-logs')->assertOk()->assertJsonFragment(['action' => 'user.role_changed']);
+    $this->actingAs($admin)->getJson('/data/audit-logs')->assertOk()->assertJsonFragment(['action' => 'user.role_changed']);
 });
 
 test('unpublish hides the confirmed result and publish restores it, both audited', function () {
@@ -442,17 +442,17 @@ test('unpublish hides the confirmed result and publish restores it, both audited
     $cycle = phase2Cycle($dept, $admin);
     [$project, $leader] = phase2Project($dept, $cycle, $supervisor, 'UCS-212', 'Publish Toggle Project');
     $final = phase2DriveToFinal($this, $project, $leader, $supervisor);
-    $this->actingAs($supervisor)->postJson("/api/submissions/{$final->id}/review", [
+    $this->actingAs($supervisor)->postJson("/data/submissions/{$final->id}/review", [
         'decision' => 'pass', 'scores' => phase2FullScores(70),
     ])->assertOk();
     expect($project->refresh()->status)->toBe('approved_published');
 
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$project->id}/unpublish")
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$project->id}/unpublish")
         ->assertOk()->assertJsonPath('status', 'under_evaluation');
-    $this->actingAs($leader)->getJson("/api/projects/{$project->id}/evaluation")
+    $this->actingAs($leader)->getJson("/data/projects/{$project->id}/evaluation")
         ->assertOk()->assertJsonPath('resultConfirmed', false);
 
-    $this->actingAs($deptAdmin)->postJson("/api/projects/{$project->id}/publish")
+    $this->actingAs($deptAdmin)->postJson("/data/projects/{$project->id}/publish")
         ->assertOk()->assertJsonPath('status', 'approved_published');
 
     expect(AuditLog::where('action', 'project.unpublished')->where('subject_id', $project->id)->exists())->toBeTrue()

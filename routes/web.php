@@ -36,7 +36,12 @@ Route::get('/departments/{department}', [DepartmentController::class, 'publicPag
 Route::get('/supervisors/{user}', [UserController::class, 'publicSupervisorPage'])->name('supervisors.show-page');
 
 // ─── Public API (no auth required for browsing) ──────────────────────────────
-Route::prefix('api')->group(function () {
+// NOTE: the prefix is 'data', not 'api', on purpose. On Vercel the /api
+// directory is reserved for serverless functions (our entry point lives at
+// api/index.php), so every application route under /api/* is swallowed by
+// the platform and 404s. Do not rename this back to 'api' while the site
+// is hosted on Vercel.
+Route::prefix('data')->group(function () {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('api.projects.search');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('api.projects.show');
     Route::get('/departments', [DepartmentController::class, 'index'])->name('api.departments.index');
@@ -98,7 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ─── Auth-protected API ───────────────────────────────────────────────────
-    Route::prefix('api')->group(function () {
+    Route::prefix('data')->group(function () {
 
         // Current user
         Route::get('/users/me', [UserController::class, 'me'])->name('api.users.me');

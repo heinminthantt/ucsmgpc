@@ -10,6 +10,7 @@ import {
     LogOut,
     Menu,
     Plus,
+    Settings,
     ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -31,7 +32,7 @@ type NavGroup = { label: string; items: NavEntry[] };
 
 export default function AppSidebarLayout({ children }: AppLayoutProps) {
     const { data: user } = useMe();
-    const { data: unread } = useUnreadCount();
+    const { data: unread } = useUnreadCount(!!user);
     const page = usePage();
     const t = useT();
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -138,19 +139,34 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
         <div className="border-t border-white/10 p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
                 <LanguageSwitcher tone="dark" />
-                <Link
-                    href="/notifications"
-                    onClick={onNavigate}
-                    aria-label={t('nav.notifications')}
-                    className="relative rounded-full border border-white/10 bg-white/5 p-2 text-sidebar-foreground/70 transition-colors hover:text-white"
-                >
-                    <Bell className="size-4" />
-                    {(unread?.count ?? 0) > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1 text-[9px] font-semibold text-sidebar-primary-foreground">
-                            {(unread?.count ?? 0) > 9 ? '9+' : unread?.count}
-                        </span>
+                <div className="flex items-center gap-1.5">
+                    {user && (
+                        <>
+                            <Link
+                                href="/settings/appearance"
+                                onClick={onNavigate}
+                                aria-label={t('nav.settings')}
+                                className="rounded-full border border-white/10 bg-white/5 p-2 text-sidebar-foreground/70 transition-colors hover:text-white"
+                                title={t('nav.settings')}
+                            >
+                                <Settings className="size-4" />
+                            </Link>
+                            <Link
+                                href="/notifications"
+                                onClick={onNavigate}
+                                aria-label={t('nav.notifications')}
+                                className="relative rounded-full border border-white/10 bg-white/5 p-2 text-sidebar-foreground/70 transition-colors hover:text-white"
+                            >
+                                <Bell className="size-4" />
+                                {(unread?.count ?? 0) > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1 text-[9px] font-semibold text-sidebar-primary-foreground">
+                                        {(unread?.count ?? 0) > 9 ? '9+' : unread?.count}
+                                    </span>
+                                )}
+                            </Link>
+                        </>
                     )}
-                </Link>
+                </div>
             </div>
 
             {user ? (
@@ -173,22 +189,13 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                     </Link>
                 </div>
             ) : (
-                <div className="flex gap-2">
-                    <Link
-                        href="/login"
-                        onClick={onNavigate}
-                        className="flex-1 rounded-md border border-white/15 px-3 py-2 text-center text-[13px] text-sidebar-foreground transition-colors hover:bg-white/10"
-                    >
-                        {t('nav.sign_in')}
-                    </Link>
-                    <Link
-                        href="/register"
-                        onClick={onNavigate}
-                        className="flex-1 rounded-md bg-sidebar-primary px-3 py-2 text-center text-[13px] font-medium text-sidebar-primary-foreground transition-opacity hover:opacity-90"
-                    >
-                        {t('nav.register')}
-                    </Link>
-                </div>
+                <Link
+                    href="/login"
+                    onClick={onNavigate}
+                    className="flex rounded-md border border-white/15 px-3 py-2 text-center text-[13px] text-sidebar-foreground transition-colors hover:bg-white/10"
+                >
+                    {t('nav.sign_in')}
+                </Link>
             )}
         </div>
     );
@@ -215,16 +222,18 @@ export default function AppSidebarLayout({ children }: AppLayoutProps) {
                         </span>
                     </Link>
                     <div className="flex items-center gap-1">
-                        <Link
-                            href="/notifications"
-                            aria-label={t('nav.notifications')}
-                            className="relative rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                        >
-                            <Bell className="size-5" />
-                            {(unread?.count ?? 0) > 0 && (
-                                <span className="absolute top-1 right-1 size-2 rounded-full bg-gold ring-2 ring-background" />
-                            )}
-                        </Link>
+                        {user && (
+                            <Link
+                                href="/notifications"
+                                aria-label={t('nav.notifications')}
+                                className="relative rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                                <Bell className="size-5" />
+                                {(unread?.count ?? 0) > 0 && (
+                                    <span className="absolute top-1 right-1 size-2 rounded-full bg-gold ring-2 ring-background" />
+                                )}
+                            </Link>
+                        )}
                         <button
                             type="button"
                             onClick={() => setMobileOpen(true)}

@@ -4,10 +4,19 @@ import type { User, Department, Course, Project, Comment, ProjectNotification, F
 
 // ── Auth user ──────────────────────────────────────────────────────────────
 export function useMe() {
-    return useQuery<User>({
+    return useQuery<User | null>({
         queryKey: ['me'],
-        queryFn: () => api.get('/users/me').then((r) => r.data),
+        queryFn: async () => {
+            try {
+                const { data } = await api.get('/users/me');
+                return data;
+            } catch (err: any) {
+                if (err?.response?.status === 401) return null;
+                throw err;
+            }
+        },
         staleTime: Infinity,
+        retry: (failureCount, err: any) => err?.response?.status !== 401 && failureCount < 1,
     });
 }
 
@@ -73,43 +82,70 @@ export function useComments(projectId: number) {
 }
 
 // ── Reactions ──────────────────────────────────────────────────────────────
-export function useReactionStatus(projectId: number) {
+export function useReactionStatus(projectId: number, enabled = true) {
     return useQuery<{ reacted: boolean; count: number }>({
         queryKey: ['reaction', projectId],
-        queryFn: () => api.get(`/reactions/${projectId}/status`).then((r) => r.data),
-        enabled: !!projectId,
+        queryFn: async () => {
+            try {
+                const { data } = await api.get(`/reactions/${projectId}/status`);
+                return data;
+            } catch (err: any) {
+                if (err?.response?.status === 401) return { reacted: false, count: 0 };
+                throw err;
+            }
+        },
+        enabled: !!projectId && enabled,
     });
 }
 
 // ── Saved projects ─────────────────────────────────────────────────────────
-export function useSavedProjects() {
+export function useSavedProjects(enabled = true) {
     return useQuery<Project[]>({
         queryKey: ['savedProjects'],
         queryFn: () => api.get('/saved-projects').then((r) => r.data),
+        enabled,
     });
 }
 
-export function useSavedStatus(projectId: number) {
+export function useSavedStatus(projectId: number, enabled = true) {
     return useQuery<boolean>({
         queryKey: ['savedStatus', projectId],
-        queryFn: () => api.get('/saved-projects/check', { params: { project_id: projectId } }).then((r) => r.data),
-        enabled: !!projectId,
+        queryFn: async () => {
+            try {
+                const { data } = await api.get('/saved-projects/check', { params: { project_id: projectId } });
+                return data;
+            } catch (err: any) {
+                if (err?.response?.status === 401) return false;
+                throw err;
+            }
+        },
+        enabled: !!projectId && enabled,
     });
 }
 
 // ── Notifications ──────────────────────────────────────────────────────────
-export function useNotifications() {
+export function useNotifications(enabled = true) {
     return useQuery<ProjectNotification[]>({
         queryKey: ['notifications'],
         queryFn: () => api.get('/notifications').then((r) => r.data),
+        enabled,
     });
 }
 
-export function useUnreadCount() {
+export function useUnreadCount(enabled = true) {
     return useQuery<{ count: number }>({
         queryKey: ['unreadCount'],
-        queryFn: () => api.get('/notifications/unread-count').then((r) => r.data),
-        refetchInterval: 30000,
+        queryFn: async () => {
+            try {
+                const { data } = await api.get('/notifications/unread-count');
+                return data;
+            } catch (err: any) {
+                if (err?.response?.status === 401) return { count: 0 };
+                throw err;
+            }
+        },
+        refetchInterval: enabled ? 30000 : false,
+        enabled,
     });
 }
 

@@ -4,7 +4,7 @@ import AppLogoIcon from '@/components/app-logo-icon';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui';
 import { useT } from '@/i18n';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 
 type Props = {
     auth?: { user?: { name: string } | null };
@@ -66,14 +66,9 @@ export default function Welcome({ auth }: Props) {
                                     <Link href={dashboard()}>{t('welcome.go_dashboard')}</Link>
                                 </Button>
                             ) : (
-                                <>
-                                    <Link href={login()} className="rounded-md px-3 py-2 text-[13px] font-medium text-foreground/80 transition-colors hover:text-foreground">
-                                        {t('nav.sign_in')}
-                                    </Link>
-                                    <Button asChild size="sm">
-                                        <Link href={register()}>{t('nav.register')}</Link>
-                                    </Button>
-                                </>
+                                <Button asChild size="sm">
+                                    <Link href={login()}>{t('nav.sign_in')}</Link>
+                                </Button>
                             )}
                         </div>
                     </div>
@@ -99,8 +94,8 @@ export default function Welcome({ auth }: Props) {
                                         <Link href="/projects">{t('welcome.browse')}</Link>
                                     </Button>
                                     <Button asChild variant="outline" size="lg" className="h-11 px-6">
-                                        <Link href={auth?.user ? dashboard() : register()}>
-                                            {auth?.user ? t('welcome.go_dashboard') : t('welcome.join')}
+                                        <Link href={auth?.user ? dashboard() : login()}>
+                                            {auth?.user ? t('welcome.go_dashboard') : t('nav.sign_in')}
                                         </Link>
                                     </Button>
                                 </div>
@@ -211,8 +206,8 @@ export default function Welcome({ auth }: Props) {
                             </p>
                             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                                 <Button asChild size="lg" className="h-11 bg-sidebar-primary px-6 text-sidebar-primary-foreground hover:bg-sidebar-primary/90">
-                                    <Link href={auth?.user ? dashboard() : register()}>
-                                        {auth?.user ? t('welcome.go_dashboard') : t('welcome.join')}
+                                    <Link href={auth?.user ? dashboard() : login()}>
+                                        {auth?.user ? t('welcome.go_dashboard') : t('nav.sign_in')}
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="lg" className="h-11 border-white/25 bg-transparent px-6 text-white hover:bg-white/10 hover:text-white">
@@ -262,10 +257,7 @@ export default function Welcome({ auth }: Props) {
                                         <Link href="/saved-projects" className="text-sidebar-foreground/75 transition-colors hover:text-white">{t('nav.saved')}</Link>
                                     </>
                                 ) : (
-                                    <>
-                                        <Link href={login()} className="text-sidebar-foreground/75 transition-colors hover:text-white">{t('nav.sign_in')}</Link>
-                                        <Link href={register()} className="text-sidebar-foreground/75 transition-colors hover:text-white">{t('nav.register')}</Link>
-                                    </>
+                                    <Link href={login()} className="text-sidebar-foreground/75 transition-colors hover:text-white">{t('nav.sign_in')}</Link>
                                 )}
                             </div>
                         </div>

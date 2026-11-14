@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button, Avatar, AvatarFallback, AvatarImage } from '@/components/ui';
 import { useMe, useUnreadCount } from '@/hooks/useCatalog';
-import { login, register } from '@/routes';
+import { login } from '@/routes';
 
 export function CatalogNavbar() {
     const { data: user } = useMe();
@@ -99,10 +99,7 @@ export function CatalogNavbar() {
                     ) : (
                         <div className="flex items-center gap-2">
                             <Link href={login()}>
-                                <Button variant="ghost" size="sm" className="">Log in</Button>
-                            </Link>
-                            <Link href={register()}>
-                                <Button size="sm" className="">Sign up</Button>
+                                <Button size="sm">Log in</Button>
                             </Link>
                         </div>
                     )}

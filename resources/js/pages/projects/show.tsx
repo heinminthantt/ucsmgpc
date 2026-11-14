@@ -18,8 +18,8 @@ export default function ProjectShow({ project }: Props) {
     const t = useT();
     const qc = useQueryClient();
     const { data: me } = useMe();
-    const { data: reactionData, refetch: refetchReaction } = useReactionStatus(project.id);
-    const { data: savedData, refetch: refetchSaved } = useSavedStatus(project.id);
+    const { data: reactionData, refetch: refetchReaction } = useReactionStatus(project.id, !!me);
+    const { data: savedData, refetch: refetchSaved } = useSavedStatus(project.id, !!me);
     const { data: comments, isLoading: commentsLoading } = useComments(project.id);
     const [newComment, setNewComment] = useState('');
 

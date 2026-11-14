@@ -157,6 +157,26 @@ class ProjectController extends Controller
             'project_files.*' => 'nullable|file|mimes:zip|max:51200',
         ]);
 
+        $user = Auth::user();
+
+        if (! empty($validated['team_id'])) {
+            $team = \App\Models\Team::with('cycle')->find($validated['team_id']);
+            $isTeamMember = $team
+                && ((int) $team->leader_id === (int) $user->id
+                    || $team->memberships()->where('user_id', $user->id)->where('invite_status', 'confirmed')->exists());
+            if (! $isTeamMember && ! $user->isAdmin()) {
+                return response()->json(['message' => 'You can only create a project for a team you belong to.'], 403);
+            }
+            if ($team && $team->project()->exists()) {
+                return response()->json(['message' => 'This team already has a project.'], 422);
+            }
+            if ($team && ! empty($validated['cycle_id']) && (int) $team->cycle_id !== (int) $validated['cycle_id']) {
+                return response()->json(['message' => 'The selected team does not belong to this cycle.'], 422);
+            }
+            $validated['cycle_id'] = $validated['cycle_id'] ?? $team?->cycle_id;
+            $validated['department_id'] = $team?->cycle?->department_id ?? $validated['department_id'];
+        }
+
         // Phase 3: GitHub reachability. A confirmed 404 blocks the save;
         // a network failure does not (offline-safe). See GitHubLinkChecker.
         $validated['github_verified_at'] = app(GitHubLinkChecker::class)
@@ -164,7 +184,7 @@ class ProjectController extends Controller
 
         $project = Project::create([
             ...$validated,
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             // Legacy form = a finished-project submission, so the legacy
             // approval flag stays 'pending' for the old screens, while the
             // new lifecycle status starts at proposal_submitted to match
@@ -275,10 +295,7 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): JsonResponse
     {
-        $user = Auth::user();
-        if ($project->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403);
-        }
+        \Illuminate\Support\Facades\Gate::authorize('delete', $project);
         $project->delete();
         return response()->json(['message' => 'Project deleted']);
     }

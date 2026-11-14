@@ -161,7 +161,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Invite-only: accounts are created/imported and activated via invite.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

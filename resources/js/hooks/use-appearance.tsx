@@ -38,7 +38,11 @@ const getStoredAppearance = (): Appearance => {
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
-    return false; // Dark mode disabled across the application
+    if (appearance === 'system') {
+        return prefersDark();
+    }
+
+    return appearance === 'dark';
 };
 
 const applyTheme = (appearance: Appearance): void => {

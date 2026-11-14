@@ -7,7 +7,7 @@ import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button, Checkbox, Input, Label, Spinner } from '@/components/ui';
 import { useT } from '@/i18n';
-import { register } from '@/routes';
+// Registration is invite-only.
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
@@ -111,14 +111,7 @@ export default function Login({ status, canResetPassword }: Props) {
                         </div>
 
                         <p className="text-center text-sm text-muted-foreground">
-                            {t('auth.no_account')}{' '}
-                            <TextLink
-                                href={register()}
-                                tabIndex={6}
-                                className="text-primary hover:underline underline-offset-4 font-medium"
-                            >
-                                {t('auth.sign_up_free')}
-                            </TextLink>
+                            Accounts are provided by your department. Use the invite link from your email to activate access.
                         </p>
                     </>
                 )}

@@ -44,6 +44,10 @@ Route::prefix('api')->group(function () {
     Route::get('/departments/{department}/courses', [CourseController::class, 'byDepartment']);
 });
 
+// ─── Public catalog pages (published content) ────────────────────────────────
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/projects/{project}/view', [ProjectController::class, 'showPage'])->name('projects.show-page');
+
 // ─── Auth-protected pages ─────────────────────────────────────────────────────
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -51,10 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     // Projects (pages)
-    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
-    Route::get('/projects/{project}/view', [ProjectController::class, 'showPage'])->name('projects.show-page');
 
     // Phase 1: My project (stage draft/submit + submission history)
     Route::inertia('/projects/my', 'projects/my')->name('projects.my');

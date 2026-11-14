@@ -15,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The app runs behind the Vercel proxy, which terminates HTTPS and
+        // forwards plain HTTP to PHP. Trust the forwarded headers so the
+        // request (and every generated URL) keeps the real https scheme;
+        // without this, asset URLs are generated as http:// and browsers
+        // block them as mixed content, leaving a blank page.
+        $middleware->trustProxies(at: '*');
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [

@@ -7,7 +7,7 @@
   ],
   "env": {
     "APP_CONFIG_CACHE": "/tmp/config.php",
-    "APP_DEBUG": "false",
+    "APP_DEBUG": "true",
     "APP_ENV": "production",
     "APP_EVENTS_CACHE": "/tmp/events.php",
     "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -30,18 +30,13 @@
   },
   "routes": [
     {
-      "src": "/build/(.*)",
-      "dest": "/build/$1"
+      "dest": "/public/build/$1",
+      "src": "/build/(.*)"
     },
     {
-      "src": "/(favicon\\.ico|robots\\.txt)",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.php"
+      "dest": "/api/index.php",
+      "src": "/(.*)"
     }
   ],
-  "version": 2,
-  "outputDirectory": "public"
+  "version": 2
 }

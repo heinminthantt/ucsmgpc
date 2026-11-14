@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
 
         if (! $seedDemo) {
             $this->seedReferenceData();
+            $this->seedAdminFromEnv();
 
             return;
         }
@@ -353,6 +354,36 @@ class DatabaseSeeder extends Seeder
     }
 
     /** Reference data that is safe in every environment (no demo content). */
+    /**
+     * Create the first system administrator from environment variables.
+     *
+     * Used on hosted deployments (e.g. Vercel) where there is no shell
+     * access to run tinker: set ADMIN_NAME, ADMIN_EMAIL and ADMIN_PASSWORD
+     * as project environment variables, redeploy once, then remove them.
+     * An existing user with that email is never modified, and the account
+     * is only created when both ADMIN_EMAIL and ADMIN_PASSWORD are set.
+     */
+    private function seedAdminFromEnv(): void
+    {
+        $email = env('ADMIN_EMAIL');
+        $password = env('ADMIN_PASSWORD');
+
+        if (! $email || ! $password) {
+            return;
+        }
+
+        User::firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => env('ADMIN_NAME', 'System Administrator'),
+                'password' => Hash::make($password),
+                'role' => 'ADMIN',
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]
+        );
+    }
+
     private function seedReferenceData(): void
     {
         foreach (['Computer Science', 'Computer Technology', 'Information Science', 'Software Engineering'] as $name) {

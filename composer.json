@@ -96,8 +96,8 @@
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
         "vercel": [
-            "@php artisan migrate --force",
-            "@php artisan db:seed --force"
+            "@php artisan migrate --database=pgsql --force",
+            "@php artisan db:seed --database=pgsql --force"
         ]
     },
     "extra": {

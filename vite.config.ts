@@ -21,8 +21,15 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
+        // Wayfinder regenerates route types by shelling out to PHP. Hosts
+        // whose build image has no PHP (Vercel) use the committed generated
+        // files under resources/js/{routes,actions,wayfinder} instead.
+        ...(process.env.VERCEL
+            ? []
+            : [
+                  wayfinder({
+                      formVariants: true,
+                  }),
+              ]),
     ],
 });
